@@ -25,7 +25,7 @@
 <body>
     <canvas id="canvas"></canvas>
     <script>
-        const canvas = document.querySelector('canvas');
+        const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext('2d');
 
         const scale = 1;
@@ -34,10 +34,13 @@
 		const fps = 30;
 		const gameSpeed = 1000 / fps;
 
+		let starMap = new Image();
+		starMap.src = "star map.avif";
+
         let shipImage = new Image();
 		shipImage.src = 'ship.png';
 
-        let shipScale = 0.125;
+        let shipScale = 60;
         let shipWidth = shipScale * scale;
         let shipHeight = shipWidth * 0.978;
 
@@ -50,8 +53,8 @@
             image: shipImage,
             width: shipWidth,
             height: shipHeight,
-            xPos: (canvas.width/2) / shipScale,
-            yPos: (canvas.height/2) / shipScale,
+            xPos: canvas.width/2-shipWidth/2,
+            yPos: canvas.height/2-shipHeight/2,
             speed: 0,
             rotation: 0
         }
@@ -61,10 +64,25 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
 
-            //ctx.scale(ship.width, ship.height);
-            //ctx.translate(ship.xPos, ship.yPos);
+			//ctx.scale(1, 1); // Scale
+			/*ctx.translate(ship.xPos, ship.yPos); // Position
+			
+			ctx.translate(ship.width/2, ship.height/2); // Rotation point
+			ctx.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
+			ctx.translate(-ship.width/2, -ship.height/2); // Reset position*/
 
-            ctx.drawImage(shipImage, ship.xPos, ship.yPos, ship.width, ship.height);
+			if (forward) {ship.speed += 5;}
+			if (backward) {ship.speed -= 2;}
+			if (left) {ship.rotation -= 2;}
+			if (right) {ship.rotation += 2;}
+
+			ctx.drawImage(starMap, ship.xPos-ship.rotation-canvas.width*5, ship.yPos+ship.speed-canvas.height*5, canvas.width*10, canvas.height*10);
+
+			ctx.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
+			ctx.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
+			ctx.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
+
+			ctx.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
 
             ctx.restore();
             setTimeout(updateScreen, gameSpeed);
