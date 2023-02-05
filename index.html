@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Game</title>
+    <style>
+        body {
+			margin: 0;
+			text-align: center;
+			background-color: steelblue;
+			font-family: monaco;
+			cursor: default;
+		}
+
+		canvas {
+			position: relative;
+			margin-top: 100px;
+			border: 2px solid black;
+			/*cursor: none;*/
+		}
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const scale = 1;
+		canvas.width = 1080 * scale;
+		canvas.height = canvas.width / 1.75;
+		const fps = 30;
+		const gameSpeed = 1000 / fps;
+
+        let shipImage = new Image();
+		shipImage.src = "ship.png";
+
+        let shipScale = 0.125;
+        let shipWidth = shipScale * scale;
+        let shipHeight = shipWidth * 0.978;
+
+		let forward;
+		let backward;
+		let left;
+		let right;
+
+        let ship = {
+            image: shipImage,
+            width: shipWidth,
+            height: shipHeight,
+            xPos: (canvas.width/2) / shipScale,
+            yPos: (canvas.height/2) / shipScale,
+            speed: 0,
+            rotation: 0
+        }
+
+        function updateScreen ()
+        {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+
+            //ctx.scale(ship.width, ship.height);
+            //ctx.translate(ship.xPos, ship.yPos);
+
+            ctx.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
+			
+
+            ctx.restore();
+            //setTimeout(updateScreen, gameSpeed);
+        }
+        updateScreen();
+
+        onkeydown = function (event)
+		{
+			if (event.keyCode == 87) // W
+			{
+				forward = true;
+			}
+			if (event.keyCode == 83) // S
+			{
+				backward = true;
+			}
+			if (event.keyCode == 65) // A
+			{
+				left = true;
+			}
+			if (event.keyCode == 68) // D
+			{
+				right = true;
+			}
+		}
+		onkeyup = function (event)
+		{
+			if (event.keyCode == 87) // W
+			{
+				forward = false;
+			}
+			if (event.keyCode == 83) // S
+			{
+				backward = false;
+			}
+			if (event.keyCode == 65) // A
+			{
+				left = false;
+			}
+			if (event.keyCode == 68) // D
+			{
+				right = false;
+			}
+		}
+
+    </script>
+</body>
+</html>
