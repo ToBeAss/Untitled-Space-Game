@@ -19,18 +19,26 @@
 			margin-top: 100px;
 			border: 2px solid black;
 			/*cursor: none;*/
+			position: absolute;
+			margin-left: -30%;
 		}
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+	<canvas id="canvasTest"></canvas>
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext('2d');
 
+		const canvasTest = document.getElementById("canvasTest");
+		const context = canvasTest.getContext('2d');
+
         const scale = 1;
 		canvas.width = 1080 * scale;
 		canvas.height = canvas.width / 1.75;
+		canvasTest.width = canvas.width;
+		canvasTest.height = canvas.height;
 		const fps = 30;
 		const gameSpeed = 1000 / fps;
 
@@ -40,6 +48,7 @@
         let shipImage = new Image();
 		shipImage.src = 'ship.png';
 
+		let backgroundScale = 5000;
         let shipScale = 60;
         let shipWidth = shipScale * scale;
         let shipHeight = shipWidth * 0.978;
@@ -48,6 +57,7 @@
 		let backward;
 		let left;
 		let right;
+		let boosters;
 
         let ship = {
             image: shipImage,
@@ -59,10 +69,15 @@
             rotation: 0
         }
 
+		let backgroundX = ship.xPos-(backgroundScale/2)
+		let backgroundY = ship.yPos-(backgroundScale/2)
+
         function updateScreen ()
         {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
+
+			context.clearRect(0, 0, canvas.width, canvas.height);
 
 			//ctx.scale(1, 1); // Scale
 			/*ctx.translate(ship.xPos, ship.yPos); // Position
@@ -71,19 +86,47 @@
 			ctx.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
 			ctx.translate(-ship.width/2, -ship.height/2); // Reset position*/
 
-			if (forward) {ship.speed += 5;}
-			if (backward) {ship.speed -= 2;}
-			if (left) {ship.rotation -= 2;}
-			if (right) {ship.rotation += 2;}
 
-			ctx.drawImage(starMap, ship.xPos-ship.rotation-canvas.width*5, ship.yPos+ship.speed-canvas.height*5, canvas.width*10, canvas.height*10);
+			if (left) {ship.rotation += 5;}
+			if (right) {ship.rotation -= 5;}
 
-			ctx.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
+			if (forward)
+			{
+				if (ship.speed < 10) {ship.speed +=1;}
+				if (boosters) {ship.speed = 20;}
+				else {ship.speed = 10;}
+				backgroundX += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				backgroundY += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+			}
+			if (!forward)
+			{
+				if (ship.speed > 0) {ship.speed -=1;}
+				else {ship.speed = 0;}
+				backgroundX += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				backgroundY += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+			}
+			if (backward) 
+			{
+				ship.speed = 5;
+				//backgroundX -= ship.speed //* Math.cos(ship.rotation * Math.PI / 180);
+				backgroundY -= ship.speed //* Math.sin(ship.rotation * Math.PI / 180);
+			}
+			
+
+			//ctx.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			//ctx.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
+			ctx.translate(canvas.width/2, canvas.height/2)
 			ctx.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
-			ctx.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
+			ctx.translate(-canvas.width/2, -canvas.height/2)
+			//ctx.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
+			//ctx.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
-			ctx.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
+			ctx.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			ctx.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
+			ctx.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
+			context.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
+			
             ctx.restore();
             setTimeout(updateScreen, gameSpeed);
         }
@@ -107,6 +150,11 @@
 			{
 				right = true;
 			}
+
+			if (event.keyCode == 32) // Space
+			{
+				boosters = true;
+			}
 		}
 		onkeyup = function (event)
 		{
@@ -125,6 +173,11 @@
 			if (event.keyCode == 68) // D
 			{
 				right = false;
+			}
+
+			if (event.keyCode == 32) // Space
+			{
+				boosters = false;
 			}
 		}
 
