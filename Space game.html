@@ -35,7 +35,7 @@
 		const gameSpeed = 1000 / fps;
 
         let shipImage = new Image();
-		shipImage.src = 'ship.png';
+		shipImage.src = "ship.png";
 
         let shipScale = 0.125;
         let shipWidth = shipScale * scale;
@@ -64,10 +64,11 @@
             //ctx.scale(ship.width, ship.height);
             //ctx.translate(ship.xPos, ship.yPos);
 
-            ctx.drawImage(shipImage, ship.xPos, ship.yPos, ship.width, ship.height);
+            ctx.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
+			
 
             ctx.restore();
-            setTimeout(updateScreen, gameSpeed);
+            //setTimeout(updateScreen, gameSpeed);
         }
         updateScreen();
 
