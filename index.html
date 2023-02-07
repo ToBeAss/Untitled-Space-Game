@@ -18,36 +18,56 @@
 			position: relative;
 			margin-top: 100px;
 			border: 2px solid black;
-			/*cursor: none;*/
 			position: absolute;
 			margin-left: -30%;
 		}
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
-	<canvas id="canvasTest"></canvas>
+    <canvas class="canvas" id="background"></canvas>
+	<canvas class="canvas" id="playerCamera"></canvas>
     <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext('2d');
+		const canvasElements = document.getElementsByClassName("canvas"); // An array of HTML Canvas Elements
+		const canvas = { // An object of Canvas Contexts (Remember to write by HTML order)
+			background: null,
+			playerCamera: null 
+		}
 
-		const canvasTest = document.getElementById("canvasTest");
-		const context = canvasTest.getContext('2d');
+		const scale = 1; // 1 for intended scale
+		const screenSize = 1080; // 1080 by default
+		const screenRatio = 1.75; // 1.75 for standard 16:9
+		const gameSpeed = 30; // 30 for intended speed
+		const fps = 60; // 60 by default
+		const updateSpeed = 1000 / fps; // how many milliseconds between each update
 
-        const scale = 1;
-		canvas.width = 1080 * scale;
-		canvas.height = canvas.width / 1.75;
-		canvasTest.width = canvas.width;
-		canvasTest.height = canvas.height;
-		const fps = 60;
-		const updateSpeed = 1000 / fps;
-		const gameSpeed = 30;
+		function assignCanvases ()
+		{
+			let index = 0;
+			for (const key in canvas) {
+				if (canvas.hasOwnProperty(key)) {
+					canvas[key] = canvasElements[index].getContext("2d");
+					index++;
+					console.log(`canvas.${key}: ${canvas[key]}`);
+				}
+			}
+		}
+		function scaleCanvases ()
+		{
+			for (let i = 0; i < canvasElements.length; i++)
+			{
+				canvasElements[i].width = screenSize * scale;
+				canvasElements[i].height = canvasElements[i].width / screenRatio;
+			}
+		}
+		assignCanvases();
+		scaleCanvases();
+
 
 		let starMap = new Image();
-		starMap.src = "star map.avif";
+		starMap.src = "images/star map.avif";
 
         let shipImage = new Image();
-		shipImage.src = 'ship.png';
+		shipImage.src = "images/ship.png";
 
 		let backgroundScale = 5000;
         let shipScale = 60;
@@ -61,12 +81,12 @@
 		let boosters;
 		let blasters;
 
-        let ship = {
+        let ship = { // write a class instead as there is to be added different ships
             image: shipImage,
             width: shipWidth,
             height: shipHeight,
-            xPos: canvas.width/2-shipWidth/2,
-            yPos: canvas.height/2-shipHeight/2,
+            xPos: canvasElements[0].width/2-shipWidth/2,
+            yPos: canvasElements[0].height/2-shipHeight/2,
             speed: 0*gameSpeed/fps,
 			maxSpeed: 10*gameSpeed/fps,
 			acceleration: 0.25*gameSpeed/fps,
@@ -82,10 +102,10 @@
 
         function updateScreen ()
         {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
+            canvas.background.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+            canvas.background.save();
 
-			context.clearRect(0, 0, canvas.width, canvas.height);
+			canvas.playerCamera.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
 
 
 			// if (Math.round(ship.rotation)%360 == 0) {} // Use to find rotation direction
@@ -152,83 +172,26 @@
 			}*/
 			
 
-			//ctx.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
-			//ctx.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
-			ctx.translate(canvas.width/2, canvas.height/2)
-			ctx.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
-			ctx.translate(-canvas.width/2, -canvas.height/2)
-			//ctx.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
-			//ctx.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
+			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			//canvas.background.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
+			canvas.background.translate(canvasElements[0].width/2, canvasElements[0].height/2)
+			canvas.background.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
+			canvas.background.translate(-canvasElements[0].width/2, -canvasElements[0].height/2)
+			//canvas.background.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
+			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
-			//ctx.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
-			//ctx.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
+			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
-			ctx.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
-			context.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
+			canvas.background.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
+			canvas.playerCamera.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
 			
-            ctx.restore();
+            canvas.background.restore();
             setTimeout(updateScreen, updateSpeed);
         }
         updateScreen();
 
-        onkeydown = function (event)
-		{
-			if (event.keyCode == 87) // W
-			{
-				forward = true;
-			}
-			if (event.keyCode == 83) // S
-			{
-				backward = true;
-			}
-			if (event.keyCode == 65) // A
-			{
-				left = true;
-			}
-			if (event.keyCode == 68) // D
-			{
-				right = true;
-			}
-
-			if (event.keyCode == 16) // Shift
-			{
-				boosters = true;
-			}
-			if (event.keyCode == 32) // Space
-			{
-				blasters = true;
-			}
-		}
-		onkeyup = function (event)
-		{
-			if (event.keyCode == 87) // W
-			{
-				forward = false;
-			}
-			if (event.keyCode == 83) // S
-			{
-				backward = false;
-			}
-			if (event.keyCode == 65) // A
-			{
-				left = false;
-			}
-			if (event.keyCode == 68) // D
-			{
-				right = false;
-			}
-
-			if (event.keyCode == 16) // Shift
-			{
-				boosters = false;
-			}
-			if (event.keyCode == 32) // Space
-			{
-				blasters = true;
-			}
-		
-		}
-
     </script>
+	<script src="input.js"></script>
 </body>
 </html>
