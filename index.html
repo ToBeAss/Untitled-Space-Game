@@ -19,7 +19,8 @@
 			margin-top: 100px;
 			border: 2px solid black;
 			position: absolute;
-			margin-left: -30%;
+			left: 0;
+			bottom: 0;
 		}
     </style>
 </head>
@@ -34,7 +35,7 @@
 		}
 
 		const scale = 1; // 1 for intended scale
-		const screenSize = 1080; // 1080 by default
+		const screenSize = 1466; // 1080 by default // 1466 max
 		const screenRatio = 1.75; // 1.75 for standard 16:9
 		const gameSpeed = 30; // 30 for intended speed
 		const fps = 60; // 60 by default
@@ -62,14 +63,13 @@
 		assignCanvases();
 		scaleCanvases();
 
-
 		let starMap = new Image();
 		starMap.src = "images/star map.avif";
 
         let shipImage = new Image();
 		shipImage.src = "images/ship.png";
 
-		let backgroundScale = 5000;
+		let backgroundScale = 15000;
         let shipScale = 60;
         let shipWidth = shipScale * scale;
         let shipHeight = shipWidth * 0.978;
@@ -100,13 +100,48 @@
 		let backgroundX = ship.xPos-(backgroundScale/2)
 		let backgroundY = ship.yPos-(backgroundScale/2)
 
+			let nebula1 = new Image();
+			nebula1.src = "images/nebula1.png";
+
+			class Nebula {constructor(image, xPos, yPos, width, height)
+			{
+				this.image = image;
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.width = width;
+				this.height = height;
+			}}
+			let nebulaArray = new Array();
+			let nebulaCount = 0;
+
+			while (nebulaCount < 100)
+			{
+				nebulaCount++;
+				nebulaArray.push(new Nebula(nebula1, (Math.random()*backgroundScale-(backgroundScale/2))-backgroundX, (Math.random()*backgroundScale-(backgroundScale/2))-backgroundY, 2000, 2000));
+			}
+
+
+			class Rock {constructor(xPos, yPos, rad)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.rad = rad;
+			}}
+			let rockArray = new Array();
+			let rockCount = 0;
+
+			while (rockCount < 50)
+			{
+				rockCount++;
+				rockArray.push(new Rock(Math.random()*backgroundScale-(backgroundScale/2), Math.random()*backgroundScale-(backgroundScale/2), Math.random()*100+50))
+			}
+
         function updateScreen ()
         {
             canvas.background.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
             canvas.background.save();
 
 			canvas.playerCamera.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
-
 
 			// if (Math.round(ship.rotation)%360 == 0) {} // Use to find rotation direction
 
@@ -183,7 +218,24 @@
 			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
 			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
-			canvas.background.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
+			canvas.background.fillRect(backgroundX, backgroundY, backgroundScale, backgroundScale);
+			//canvas.background.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
+
+			nebulaArray.forEach(function(object, index)
+			{
+				canvas.background.globalAlpha = 0.3;
+				canvas.background.drawImage(object.image, object.xPos+backgroundX, object.yPos+backgroundY, object.width, object.height);
+			});
+
+			rockArray.forEach(function(object, index)
+			{
+				canvas.background.globalAlpha = 1;
+				canvas.background.fillStyle = "#FFFFFF";
+				canvas.background.beginPath();
+				canvas.background.arc(object.xPos+backgroundX, object.yPos+backgroundY, object.rad, 0, 2 * Math.PI);
+				canvas.background.fill();
+			});
+
 			canvas.playerCamera.drawImage(ship.image, ship.xPos, ship.yPos, ship.width, ship.height);
 			
             canvas.background.restore();
