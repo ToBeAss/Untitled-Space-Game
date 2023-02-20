@@ -17,7 +17,7 @@
 		canvas {
 			position: relative;
 			margin-top: 100px;
-			border: 2px solid black;
+			border: 0;
 			position: absolute;
 			left: 0;
 			bottom: 0;
@@ -35,7 +35,7 @@
 		}
 
 		const scale = 1; // 1 for intended scale
-		const screenSize = 1466; // 1080 by default // 1466 max
+		const screenSize = 1470; // 1080 by default // 1470 max
 		const screenRatio = 1.75; // 1.75 for standard 16:9
 		const gameSpeed = 30; // 30 for intended speed
 		const fps = 60; // 60 by default
@@ -209,9 +209,9 @@
 
 			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
 			//canvas.background.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
-			canvas.background.translate(canvasElements[0].width/2, canvasElements[0].height/2)
-			canvas.background.rotate(ship.rotation * Math.PI / 180); // Rotation * 0.9948377
-			canvas.background.translate(-canvasElements[0].width/2, -canvasElements[0].height/2)
+			canvas.playerCamera.translate(canvasElements[0].width/2, canvasElements[0].height/2)
+			canvas.playerCamera.rotate(-ship.rotationSpeed * Math.PI / 180);
+			canvas.playerCamera.translate(-canvasElements[0].width/2, -canvasElements[0].height/2)
 			//canvas.background.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
 			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
 
