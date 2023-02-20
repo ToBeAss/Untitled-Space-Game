@@ -210,7 +210,7 @@
 			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
 			//canvas.background.translate(ship.xPos+(ship.width/2), ship.yPos+(ship.height/2));
 			canvas.playerCamera.translate(canvasElements[0].width/2, canvasElements[0].height/2)
-			canvas.playerCamera.rotate(-ship.rotationSpeed * Math.PI / 180);
+			canvas.playerCamera.rotate(-ship.rotationSpeed * Math.PI / 180); // ship.rotation if background
 			canvas.playerCamera.translate(-canvasElements[0].width/2, -canvasElements[0].height/2)
 			//canvas.background.translate(-ship.xPos-(ship.width/2), -ship.yPos-(ship.height/2));
 			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
