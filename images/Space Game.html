@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Game</title>
+    <style>
+        body {
+			margin: 0;
+			/*text-align: center;*/
+			background-color: steelblue;
+			font-family: monaco;
+			cursor: default;
+		}
+
+		.canvas {
+			position: absolute;
+			border: 0;
+			left: 0;
+			top: 0;
+		}
+
+		#minimap {
+			position: absolute;
+			border: 0;
+			left: 1250px;
+			top: 20px;
+		}
+    </style>
+</head>
+<body>
+	<canvas class="canvas" id="background"></canvas>
+	<canvas class="canvas" id="middleground"></canvas>
+    <canvas class="canvas" id="foreground"></canvas>
+	<canvas class="canvas" id="playerCamera"></canvas>
+	<canvas class="canvas" id="userInterface"></canvas>
+	<canvas class="canvas" id="minimap"></canvas>
+    <script>
+		const canvasElements = document.getElementsByClassName("canvas"); // An array of HTML Canvas Elements
+		const canvas = { // An object of Canvas Contexts (Remember to write by HTML order)
+			background: null,
+			middleground: null,
+			foreground: null,
+			playerCamera: null,
+			userInterface: null,
+			minimap: null 
+		}
+
+		const scale = 1; // 1 for intended scale
+		const screenSize = 1470; // 1080 by default // 1470 max
+		const screenRatio = 1.75; // 1.75 for standard 16:9
+		const gameSpeed = 30; // 30 for intended speed
+		const fps = 60; // 60 by default
+		const updateSpeed = 1000 / fps; // how many milliseconds between each update
+
+		const x_min = 0;
+		const x_max = screenSize * scale;
+		const y_min = 0;
+		const y_max = x_max / screenRatio;
+
+		function assignCanvases ()
+		{
+			let index = 0;
+			for (const key in canvas) {
+				if (canvas.hasOwnProperty(key)) {
+					canvas[key] = canvasElements[index].getContext("2d");
+					index++;
+					console.log(`canvas.${key}: ${canvas[key]}`);
+				}
+			}
+		}
+		function scaleCanvases ()
+		{
+			for (let i = 0; i < canvasElements.length; i++)
+			{
+				if (i == 5) 
+				{
+					canvasElements[i].width = 200 * scale;
+					canvasElements[i].height = 200 * scale;
+				}
+				else
+				{
+					canvasElements[i].width = screenSize * scale;
+					canvasElements[i].height = canvasElements[i].width / screenRatio;
+				}
+			}
+		}
+		assignCanvases();
+		scaleCanvases();
+
+
+		let starMap = new Image();
+		starMap.src = "images/star map.avif";
+
+        let shipImage = new Image();
+		shipImage.src = "images/ship.png";
+
+		let enemyImage = new Image();
+		enemyImage.src = "images/enemy.png";
+
+		let backgroundScale = 15000;
+        let shipScale = 60;
+        let shipWidth = shipScale * scale;
+        let shipHeight = shipWidth; // 0.978 ?
+
+		let forward;
+		let backward;
+		let left;
+		let right;
+		let boosters;
+		let blasters;
+
+		let collisionRange = 0.66;
+		let pickupRange = 1.33;
+
+		let spawnPosition = {x: canvasElements[0].width/2-shipWidth/2, y: canvasElements[0].height/2-shipHeight/2};
+
+
+
+        let ship = { // write a class instead as there is to be added different ships
+            image: shipImage,
+            width: shipWidth,
+            height: shipHeight,
+            xPos: 7500,
+            yPos: 7500,
+            speed: 0*gameSpeed/fps,
+			maxSpeed: 10*gameSpeed/fps,
+			acceleration: 0.25*gameSpeed/fps,
+			deceleration: 0.1*gameSpeed/fps,
+            rotation: 0,
+			rotationSpeed: 0*gameSpeed/fps,
+			maxRotationSpeed: 5*gameSpeed/fps,
+			rotationAcceleration: 0.5*gameSpeed/fps,
+			boostConsumption: 0.5,
+			boostTank: 200,
+			boostCapacity: 200,
+			health: 1000,
+			maxHealth: 1000
+        }
+
+		/*ship.xPos += ship.width/2;
+		ship.yPos += ship.height/2;*/
+
+		let backgroundX = spawnPosition.x-(backgroundScale/2)+ship.width/2
+		let backgroundY = spawnPosition.y-(backgroundScale/2)+ship.height/2
+
+		var motionTrailLength = 10;
+        var positions = [];
+
+
+			let nebula1 = new Image();
+			nebula1.src = "images/nebula1.png";
+
+			let nebula2 = new Image();
+			nebula2.src = "images/nebula2.png";
+
+			let stars1 = new Image();
+			stars1.src = "images/stars1.png";
+
+			class Nebula {constructor(image, xPos, yPos, width, height, z)
+			{
+				this.image = image;
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.width = width;
+				this.height = height;
+				this.z = z;
+			}}
+			let nebulaArray = new Array();
+			let nebulaCount = 0;
+
+			while (nebulaCount < 100)
+			{
+				nebulaCount++;
+				// Needs change
+					let z = 0.25;
+					let image = nebula1;
+					if (nebulaCount >= 50) {image = nebula2; z = 0.5;}
+					if (nebulaCount >= 75) {image = stars1; z = 1;}
+				nebulaArray.push(new Nebula(image, (Math.random()*backgroundScale-(backgroundScale/2))-backgroundX, (Math.random()*backgroundScale-(backgroundScale/2))-backgroundY, 2000, 2000, z));
+			}
+
+
+			class Rock {constructor(xPos, yPos, rad)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.rad = rad;
+			}}
+			let rockArray = new Array();
+			let rockCount = 0;
+
+			while (rockCount < 50)
+			{
+				rockCount++;
+				rockArray.push(new Rock(Math.random()*backgroundScale, Math.random()*backgroundScale, Math.random()*100+50))
+			}
+
+			class Boost {constructor(xPos, yPos)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+			}}
+			let boostArray = new Array();
+			let boostCount = 0;
+
+
+		let sections = backgroundScale/100;
+
+
+        function updateScreen ()
+        {
+            canvas.background.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+            canvas.background.save();
+
+			canvas.middleground.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+			canvas.foreground.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+
+			canvas.playerCamera.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+
+			canvas.userInterface.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+			canvas.minimap.clearRect(0, 0, canvasElements[0].width, canvasElements[0].height);
+
+			// if (Math.round(ship.rotation)%360 == 0) {} // Use to find rotation direction
+
+			if (left && !right) 
+			{
+				if (ship.rotationSpeed < ship.maxRotationSpeed) {ship.rotationSpeed += ship.rotationAcceleration}
+				else {ship.rotationSpeed = ship.maxRotationSpeed;}
+				ship.rotation += ship.rotationSpeed; 
+			}
+			if (right && !left) 
+			{
+				if (ship.rotationSpeed > -ship.maxRotationSpeed) {ship.rotationSpeed -= ship.rotationAcceleration}
+				else {ship.rotationSpeed = -ship.maxRotationSpeed;}
+				ship.rotation += ship.rotationSpeed; 
+			}
+			if (left && right)
+			{
+				if (ship.rotationSpeed > 0.1) {ship.rotationSpeed -= ship.rotationAcceleration}
+				else if (ship.rotationSpeed < -0.1) {ship.rotationSpeed += ship.rotationAcceleration}
+				else {ship.rotationSpeed = 0;}
+				ship.rotation += ship.rotationSpeed;
+			}
+			if (!left && !right)
+			{
+				if (ship.rotationSpeed > 0.1) {ship.rotationSpeed -= ship.rotationAcceleration}
+				else if (ship.rotationSpeed < -0.1) {ship.rotationSpeed += ship.rotationAcceleration}
+				else {ship.rotationSpeed = 0;}
+				ship.rotation += ship.rotationSpeed; 
+			}
+
+			if (forward)
+			{
+				if (boosters && ship.boostTank > 0) 
+				{
+					ship.boostTank -= ship.boostConsumption;
+					if (ship.speed < ship.maxSpeed*2) {ship.speed += ship.acceleration;}
+					else {ship.speed = ship.maxSpeed*2;}
+				}
+				else
+				{
+					if (ship.speed > ship.maxSpeed+0.1) {ship.speed -= ship.acceleration;}
+
+					else if (ship.speed < ship.maxSpeed) {ship.speed += ship.acceleration;}
+					else {ship.speed = ship.maxSpeed;}
+				}
+				ship.xPos += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				ship.yPos += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+
+				//backgroundX=ship.xPos;
+				//backgroundY=ship.yPos;
+			}
+			if (!forward)
+			{
+				//if (ship.speed > ship.maxSpeed+0.1) {ship.speed -= ship.acceleration;}
+				if (ship.speed > 0.1) {ship.speed -= ship.speed*ship.deceleration;} // Deceleration value
+				
+				//else if (ship.speed < -ship.maxSpeed/2-0.1) {ship.speed += ship.acceleration;}
+				else if (ship.speed < -0.1) {ship.speed -= ship.speed*ship.deceleration;}
+
+				else {ship.speed = 0;}
+				ship.xPos += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				ship.yPos += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+
+				//backgroundX=ship.xPos;
+				//backgroundY=ship.yPos;
+			}
+
+
+			/*if (backward) // SHOULD TURN THE OTHER WAY
+			{
+				//ship.speed = -5;
+				if (ship.speed > -ship.maxSpeed/2) {ship.speed -= ship.acceleration;}
+				else {ship.speed = -ship.maxSpeed/2;}
+				backgroundX += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				backgroundY += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+			}
+			if (forward && backward)
+			{
+				if (ship.speed > 0.1) {ship.speed -= ship.acceleration}
+				else if (ship.speed < -0.1) {ship.speed += ship.acceleration}
+				else {ship.speed = 0;}
+				backgroundX += ship.speed * Math.sin(ship.rotation * Math.PI / 180);
+				backgroundY += ship.speed * Math.cos(ship.rotation * Math.PI / 180);
+			}*/
+			
+
+			canvas.minimap.fillStyle = "black";
+			canvas.minimap.fillRect(0, 0, 200, 200);
+
+
+			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			//canvas.background.translate(spawnPosition.x+(ship.width/2), spawnPosition.y+(ship.height/2));
+			canvas.playerCamera.translate(canvasElements[0].width/2, canvasElements[0].height/2)
+			canvas.playerCamera.rotate(-ship.rotationSpeed * Math.PI / 180); // ship.rotation if background
+			canvas.playerCamera.translate(-canvasElements[0].width/2, -canvasElements[0].height/2)
+			//canvas.background.translate(-spawnPosition.x-(ship.width/2), -spawnPosition.y-(ship.height/2));
+			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
+
+			//canvas.background.translate(backgroundX+backgroundScale/2, backgroundY+backgroundScale/2)
+			//canvas.background.translate(-(backgroundX+backgroundScale/2), -(backgroundY+backgroundScale/2))
+
+			canvas.background.fillRect(backgroundX+ship.xPos, backgroundY+ship.yPos, backgroundScale, backgroundScale);
+			//canvas.background.drawImage(starMap, backgroundX, backgroundY, backgroundScale, backgroundScale);
+
+			
+			for (let i = 0; i < sections; i++)
+			{
+				// vertical
+				canvas.foreground.strokeStyle = "red";
+				canvas.foreground.beginPath(); // Start a new path
+				canvas.foreground.moveTo(i*sections+backgroundX+ship.xPos, 0+backgroundY+ship.yPos); // Move the pen to (30, 50)
+				canvas.foreground.lineTo(i*sections+backgroundX+ship.xPos, backgroundScale+backgroundY+ship.yPos); // Draw a line to (150, 100)
+				canvas.foreground.stroke(); // Render the path
+			}
+			for (let i = 0; i < sections; i++)
+			{
+				// horizontal
+				canvas.foreground.strokeStyle = "red";
+				canvas.foreground.beginPath(); // Start a new path
+				canvas.foreground.moveTo(0+backgroundX+ship.xPos, i*sections+backgroundY+ship.yPos); // Move the pen to (30, 50)
+				canvas.foreground.lineTo(backgroundScale+backgroundX+ship.xPos, i*sections+backgroundY+ship.yPos); // Draw a line to (150, 100)
+				canvas.foreground.stroke(); // Render the path
+			}
+
+
+			nebulaArray.forEach(function(object, index)
+			{
+				canvas.background.globalAlpha = 0.3;
+				canvas.background.drawImage(object.image, object.xPos+backgroundX+ship.xPos*object.z, object.yPos+backgroundY+ship.yPos*object.z, object.width, object.height);
+
+				canvas.middleground.globalAlpha = 0.5;
+				canvas.middleground.drawImage(object.image, object.xPos+backgroundX+ship.xPos*object.z, object.yPos+backgroundY+ship.yPos*object.z, object.width, object.height);
+				
+				/*
+				canvas.foreground.globalAlpha = 0.7;
+				canvas.foreground.drawImage(object.image, object.xPos+backgroundX*object.z, object.yPos+backgroundY*object.z, object.width, object.height);
+				*/
+			});
+
+			rockArray.forEach(function(object, index)
+			{
+				canvas.foreground.globalAlpha = 1;
+				canvas.foreground.fillStyle = "gray";
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(object.xPos+backgroundX+ship.xPos, object.yPos+backgroundY+ship.yPos, object.rad, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+
+				canvas.minimap.fillStyle = "gray";
+				canvas.minimap.beginPath();
+				canvas.minimap.arc(object.xPos/75, object.yPos/75, object.rad/75*6, 0, 2 * Math.PI);
+				canvas.minimap.fill();
+
+
+				// hitbox of ship when hitting things
+				/*
+				canvas.foreground.fillStyle = "white";
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(spawnPosition.x+ship.width/2, spawnPosition.y+ship.width/2, ship.width/2 * collisionRange, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+				*/
+
+				// collision
+				var distanceX = (object.xPos + backgroundX+ship.xPos) - (spawnPosition.x + ship.width / 2);
+				var distanceY = (object.yPos + backgroundY+ship.yPos) - (spawnPosition.y + ship.height / 2);
+				var distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+				if (distance < object.rad + Math.min(ship.width * collisionRange, ship.height * collisionRange) / 2)
+				{
+					// Collision detected
+					canvas.foreground.fillStyle = "red";
+					canvas.foreground.beginPath();
+					canvas.foreground.arc(spawnPosition.x+ship.width/2, spawnPosition.y+ship.width/2, ship.width/2 * collisionRange, 0, 2 * Math.PI);
+					canvas.foreground.fill();
+
+					if (ship.health > 0)
+					{
+						if (ship.speed >= 0)
+						{
+							ship.health -= ship.speed + 1;
+						}
+						else
+						{
+							ship.health += ship.speed + 1;
+						}
+					}
+					else
+					{
+						// GAME OVER
+							location.reload();
+					}
+				}
+			});
+
+			while (boostCount < 100)
+			{
+				boostCount++;
+				boostArray.push(new Boost(Math.random()*backgroundScale, Math.random()*backgroundScale))
+			}
+			boostArray.forEach(function(object, index)
+			{
+				canvas.foreground.globalAlpha = 1;
+				canvas.foreground.fillStyle = "yellow";
+				canvas.foreground.fillRect(object.xPos+backgroundX+ship.xPos, object.yPos+backgroundY+ship.yPos, 25, 40);
+
+				canvas.minimap.fillStyle = "yellow";
+				canvas.minimap.fillRect(object.xPos/75-2.25, object.yPos/75-4, 25/75*12, 40/75*12); //4.5 8
+
+
+				// hitbox of ship when picking up items
+				/*
+				canvas.foreground.fillStyle = "white";
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(spawnPosition.x+ship.width/2, spawnPosition.y+ship.width/2, ship.width/2 * pickupRange, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+				canvas.foreground.fillRect(spawnPosition.x-ship.width/2*pickupRange/4, spawnPosition.y-ship.height/2*pickupRange/4, ship.width*pickupRange, ship.height*pickupRange)
+				*/
+
+				// collision
+				var overlapX = Math.abs((object.xPos + backgroundX+ship.xPos + 25/2) - (spawnPosition.x + ship.width / 2)) < (25 / 2 + ship.width / 2 * pickupRange);
+
+				// Check for collision in the y-direction
+				var overlapY = Math.abs((object.yPos + backgroundY+ship.yPos + 40/2) - (spawnPosition.y + ship.height / 2)) < (40 / 2 + ship.height / 2 * pickupRange);
+
+				// Check for collision in both directions
+				if (overlapX && overlapY) {
+					// collision detected
+					if (ship.boostTank != ship.boostCapacity)
+					{
+						// able to pick up boost
+						if (ship.boostCapacity - ship.boostTank <= 50)
+						{
+							ship.boostTank += ship.boostCapacity - ship.boostTank;
+						}
+						else
+						{
+							ship.boostTank += 50;
+						}
+						boostArray.splice(index, 1);
+						boostCount--;
+					}
+				}
+			});
+
+			canvas.minimap.fillStyle = "lime";
+			canvas.minimap.fillRect((spawnPosition.x-backgroundX-ship.xPos)/75+7.5, (spawnPosition.y-backgroundY-ship.yPos)/75+2.5, ship.width/75*6, ship.height/75*6)
+
+
+			// motion trail
+			storeLastPosition(spawnPosition.x+ship.xPos, spawnPosition.y+ship.yPos) ;
+			
+			for (var i = 0; i < positions.length; i++) 
+			{
+				var ratio = (i + 1) / positions.length;
+
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(positions[i].x, positions[i].y, 50, 0, 2 * Math.PI, true);
+				canvas.foreground.fillStyle = "rgba(255, 255, 255, " + ratio / 2 + ")";
+				canvas.foreground.fill();
+			}
+			
+			//console.log(positions[0].y)
+
+			canvas.playerCamera.drawImage(ship.image, spawnPosition.x, spawnPosition.y, ship.width, ship.height);
+
+
+			drawInterface();
+
+
+            canvas.background.restore();
+            setTimeout(updateScreen, updateSpeed);
+        }
+        updateScreen();
+
+		function drawInterface() 
+		{
+			canvas.userInterface.strokeStyle = "white";
+			canvas.userInterface.fillStyle = "white";
+			canvas.userInterface.lineWidth = 2;
+
+			canvas.userInterface.font = "20px monaco";
+			canvas.userInterface.fillText("Speed: " + ship.speed.toFixed(1), x_min+20, y_max-40);
+			canvas.userInterface.fillText("Rotation: " + Math.round(ship.rotation)%360, x_min+20, y_max-20);
+
+			canvas.userInterface.font = "14px monaco";
+			let textLength = canvas.userInterface.measureText("Minimap here").width;
+			canvas.userInterface.fillText("Minimap here", x_max-textLength-65, y_min+125);
+			canvas.userInterface.strokeRect(x_max-200-20, y_min+20, 200, 200);
+			textLength = canvas.userInterface.measureText("x: " + ship.xPos.toFixed(0) + ", y: " + ship.yPos.toFixed(0)).width;
+			canvas.userInterface.fillText("x: " + ship.xPos.toFixed(0) + ", y: " + ship.yPos.toFixed(0), x_max-textLength-20, y_min+220+20)
+
+			canvas.userInterface.font = "24px monaco";
+			canvas.userInterface.fillText("Tasks:", x_min+20, y_min+40);
+			canvas.userInterface.font = "20px monaco";
+			canvas.userInterface.fillText("* Collect fuel 0/10", x_min+20, y_min+40+40);
+			canvas.userInterface.fillText("* Eliminate enemies 0/5", x_min+20, y_min+40+80);
+
+			canvas.userInterface.font = "20px monaco";
+			textLength = canvas.userInterface.measureText("Boost tank: " + calculatePercentage(ship.boostTank, ship.boostCapacity, 0) + "%").width;
+			canvas.userInterface.fillText("Boost tank: " + calculatePercentage(ship.boostTank, ship.boostCapacity, 0) + "%", x_max-textLength-20, y_max-20-20);
+			textLength = canvas.userInterface.measureText("Hull integrity: " + calculatePercentage(ship.health, ship.maxHealth, 0) + "%").width;
+			if (calculatePercentage(ship.health, ship.maxHealth, 0) < 25)
+			{
+				canvas.userInterface.fillStyle = "red";
+			}
+			else if (calculatePercentage(ship.health, ship.maxHealth, 0) < 50)
+			{
+				canvas.userInterface.fillStyle = "orange";
+			}
+			else
+			{
+				canvas.userInterface.fillStyle = "white";
+			}
+			canvas.userInterface.fillText("Hull integrity: " + calculatePercentage(ship.health, ship.maxHealth, 0) + "%", x_max-textLength-20, y_max-20);
+		}
+
+		function calculatePercentage (dividend, divisor, numberOfDecimals)
+		{
+			return ((dividend/divisor)*100).toFixed(numberOfDecimals);
+		}
+
+		function storeLastPosition(xPos, yPos) 
+        {
+            // push an item
+            positions.unshift({
+                x: xPos,
+                y: yPos
+            });
+            
+            //get rid of first item
+            if (positions.length > motionTrailLength) {
+                positions.pop();
+				console.log(positions[0].y + " " + positions[positions.length-1].y)
+            }
+        }
+
+
+    </script>
+	<script src="input.js"></script>
+	<script src="userInterface.js"></script>
+</body>
+</html>

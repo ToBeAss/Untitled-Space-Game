@@ -25,6 +25,11 @@ onkeydown = function (event)
     {
         blasters = true;
     }
+
+    if (event.keyCode == 69) // E
+    {
+        interact = true;
+    }
 }
 onkeyup = function (event)
 {
@@ -51,6 +56,11 @@ onkeyup = function (event)
     }
     if (event.keyCode == 32) // Space
     {
-        blasters = true;
+        blasters = false;
+    }
+
+    if (event.keyCode == 69) // E
+    {
+        interact = false;
     }
 }
