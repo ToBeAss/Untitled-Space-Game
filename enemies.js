@@ -84,7 +84,7 @@ function handleEnemies()
 
         if (distance < object.vision + Math.min(ship.width, ship.height) / 2)
         {
-            if (distance < object.minDistance + Math.min(ship.width, ship.height) / 2 && ship.speed < ship.maxSpeed-0.2)
+            if (distance < object.minDistance + Math.min(ship.width, ship.height) / 2 && ship.speed < ship.maxSpeed-0.2 && object.health > object.maxHealth/4)
             {
                 decelerateSpeed(object);
             }
@@ -95,6 +95,13 @@ function handleEnemies()
 
             // turning
             let angle = drawLinesAndCalculateAngle(object);
+
+            if (object.health < object.maxHealth/4)
+            {
+                // run away
+                // needs change
+                angle = -angle;
+            }
 
             if (angle > 2) // turn left // * (object.speed+1)
             {
@@ -157,11 +164,7 @@ function handleEnemies()
         }
 
         //health bar
-        if (calculatePercentage(object.health, object.maxHealth, 0) < 25) {color = "red";}
-        else if (calculatePercentage(object.health, object.maxHealth, 0) < 50) {color = "orange";}
-        else {color = TEXT.color;}
-        displayText("Health: " + calculatePercentage(object.health, object.maxHealth, 0) + "%", MAP_LEFT+object.xPos+ship.xPos, MAP_TOP+object.yPos+ship.yPos, TEXT.size, color)
-        /*
+            //displayText("Enemy", MAP_LEFT+object.xPos+ship.xPos - getTextLength("Enemy", 14)/2 + object.width/2, MAP_TOP+object.yPos+ship.yPos - 10, 16, color)
         let width = calculatePercentage(object.health, object.maxHealth, 0);
         canvas.userInterface.fillStyle = "black";
         canvas.userInterface.fillRect(MAP_LEFT+object.xPos+ship.xPos - 100/2 + object.width/2, MAP_TOP+object.yPos+ship.yPos, 100, 5)
@@ -170,7 +173,7 @@ function handleEnemies()
         canvas.userInterface.strokeRect(MAP_LEFT+object.xPos+ship.xPos - 100/2 + object.width/2, MAP_TOP+object.yPos+ship.yPos, 100, 5)
         canvas.userInterface.fillStyle = "red";
         canvas.userInterface.fillRect(MAP_LEFT+object.xPos+ship.xPos - 100/2 + object.width/2, MAP_TOP+object.yPos+ship.yPos, width, 5)
-        */
+        
     });
 }
 

@@ -9,44 +9,6 @@ function getTextLength (text, size)
     return canvas.userInterface.measureText(text).width;
 }
 
-function calculateAngle (startpoint, line1_end, line2_end)
-{
-    let dAx = startpoint.x - line1_end.x;
-    let dAy = startpoint.y - line1_end.y;
-    let dBx = startpoint.x - line2_end.x;
-    let dBy = startpoint.y - line2_end.y;
-
-    /*let dAx = line1_end.x - startpoint.x;
-    let dAy = line1_end.y - startpoint.y;
-    let dBx = line2_end.x - startpoint.x;
-    let dBy = line2_end.y - startpoint.y;*/
-
-    let angle = Math.atan2(dAx * dBy - dAy * dBx, dAx * dBx + dAy * dBy);
-    let degree_angle = angle * (180 / Math.PI);
-
-    
-    canvas.enemies.lineWidth = 2;
-    canvas.enemies.strokeStyle = "blue";
-    canvas.enemies.beginPath();
-    canvas.enemies.moveTo(startpoint.x, startpoint.y);
-    canvas.enemies.lineTo(line1_end.x, line1_end.y);
-    canvas.enemies.stroke();
-    canvas.enemies.strokeStyle = "red";
-    canvas.enemies.beginPath();
-    canvas.enemies.moveTo(startpoint.x, startpoint.y);
-    canvas.enemies.lineTo(line2_end.x, line2_end.y);
-    canvas.enemies.stroke();
-    
-    
-    return degree_angle;
-}
-
-function calculateDefaultAngle (startpoint, endpoint)
-{
-    let upwards = {x:startpoint.x, y:startpoint.y-100}
-    return calculateAngle (startpoint, upwards, endpoint)
-}
-
 
 // Function to calculate the angle between two vectors
 function calculateAngle(vector1, vector2) {

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+        const G = 6.674 * Math.pow(10, -11); // Gravitational constant
+        const timeStep = 1; // Time step for simulation
+
+        const canvas = document.getElementById("myCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class CelestialBody {
+            constructor(x, y, mass, radius, color, vx = 0, vy = 0) {
+                this.x = x;
+                this.y = y;
+                this.mass = mass;
+                this.radius = radius;
+                this.color = color;
+                this.vx = vx;
+                this.vy = vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            /*drawForceVector(body) {
+                const dx = body.x - this.x;
+                const dy = body.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const force = (G * this.mass * body.mass) / Math.pow(distance, 2);
+
+                // Draw force vector
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                const arrowLength = 20;
+                const arrowAngle = Math.atan2(dy, dx);
+                const arrowEndX = this.x + arrowLength * Math.cos(arrowAngle);
+                const arrowEndY = this.y + arrowLength * Math.sin(arrowAngle);
+                ctx.lineTo(arrowEndX, arrowEndY);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw arrowhead
+                ctx.beginPath();
+                const arrowHeadSize = 5;
+                const arrowHeadAngle1 = arrowAngle + Math.PI + (Math.PI / 6);
+                const arrowHeadAngle2 = arrowAngle + Math.PI - (Math.PI / 6);
+                const arrowHeadEndX1 = arrowEndX + arrowHeadSize * Math.cos(arrowHeadAngle1);
+                const arrowHeadEndY1 = arrowEndY + arrowHeadSize * Math.sin(arrowHeadAngle1);
+                const arrowHeadEndX2 = arrowEndX + arrowHeadSize * Math.cos(arrowHeadAngle2);
+                const arrowHeadEndY2 = arrowEndY + arrowHeadSize * Math.sin(arrowHeadAngle2);
+                ctx.moveTo(arrowEndX, arrowEndY);
+                ctx.lineTo(arrowHeadEndX1, arrowHeadEndY1);
+                ctx.moveTo(arrowEndX, arrowEndY);
+                ctx.lineTo(arrowHeadEndX2, arrowHeadEndY2);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }*/
+
+            updateVelocity(bodies) {
+                for (const body of bodies) {
+                    if (body !== this) {
+                        const dx = body.x - this.x;
+                        const dy = body.y - this.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const force = (G * this.mass * body.mass) / Math.pow(distance, 2);
+                        const accelerationX = force * (dx / distance) / this.mass;
+                        const accelerationY = force * (dy / distance) / this.mass;
+
+                        this.vx += accelerationX * timeStep;
+                        this.vy += accelerationY * timeStep;
+
+                        if (this.color == "blue")
+                        {
+                            console.log(this.vx.toFixed(0))
+                        }
+                    }
+                }
+            }
+
+            updatePosition() {
+                this.x += this.vx * timeStep;
+                this.y += this.vy * timeStep;
+            }
+        }
+
+        const sun = new CelestialBody(canvas.width / 2, canvas.height / 2, 1.989 * Math.pow(10, 30), 20, "yellow");
+        const earth = new CelestialBody(canvas.width / 2 + 150, canvas.height / 2, 5.97219 * Math.pow(10, 24), 5, "blue", 0, 0); //-10
+
+        const bodies = [sun, earth];
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+             // Draw force vectors
+             for (const body of bodies) {
+                for (const otherBody of bodies) {
+                    if (body !== otherBody) {
+                        body.drawForceVector(otherBody);
+                    }
+                }
+            }
+
+            for (const body of bodies) {
+                
+                body.updateVelocity(bodies);
+                body.updatePosition();
+                body.draw();
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>

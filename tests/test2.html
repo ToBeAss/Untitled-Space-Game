@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity</title>
+</head>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+        border: 1px solid black;
+    }
+</style>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <button id="nextStep">Next Step</button>
+    <script>
+        const INSPECT = "green";
+        const timeStep = 1;
+        const viewMode = "step";
+
+        let nextStep = document.getElementById("nextStep").onclick = function ()
+        {
+            update();
+        };
+
+        let canvas = document.getElementById("myCanvas");
+        let ctx = canvas.getContext("2d");
+
+        canvas.width = 800;
+        canvas.height = 800;
+
+
+        //const G = 6.674 * Math.pow(10, -11); // Gravitational constant
+        //const G = 9.81;
+        const G = 1000;
+
+
+        class CelestialBody {
+            constructor(x, y, radius, color) 
+            {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+            }
+
+            draw() 
+            {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            getForceTowards(otherBody, distance)
+            {
+                let force = (G * this.radius * otherBody.radius) / Math.pow(distance, 2);
+                if (this.color == INSPECT)
+                {
+                    console.log("The force between " + this.color + " and " + otherBody.color + " is " + force);
+                }
+                return force;
+            }
+
+            updateVelocity(bodies)
+            {
+                for (let other of bodies)
+                {
+                    if (this !== other)
+                    {
+                        let dx = other.x - this.x;
+                        let dy = other.y - this.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        let angle = Math.atan2(dx, dy);
+
+                        let force = (G * this.radius * other.radius) / Math.pow(distance, 2);
+
+                        let forceX = force * Math.cos(angle);
+                        let forceY = force * Math.sin(angle);
+
+                        this.x += forceX / this.radius * timeStep;
+                        this.y += forceY / this.radius * timeStep;
+
+                        console.log(this.x)
+
+                        other.x -= forceX / other.radius * timeStep;
+                        other.y -= forceY / other.radius * timeStep;
+
+
+                        if (this.color == INSPECT && viewMode == "step")
+                        {
+                            console.log(this.color + " is " + distance + " units away from " + other.color);
+                            console.log(this.color + " is " + angle*180/Math.PI + " degrees from " + other.color);
+                            console.log("The force between " + this.color + " and " + other.color + " is " + force);
+                        }
+                    }
+                }
+            }
+        };
+
+
+
+        let sun = new CelestialBody(canvas.width / 2, canvas.height / 2, 20, "yellow");
+        let earth = new CelestialBody(canvas.width / 2 + 150, canvas.height / 2, 5, "green");
+        let bodies = [sun, earth];
+
+
+
+        function update()
+        {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+            for (let body of bodies)
+            {
+                body.updateVelocity(bodies);
+                
+                body.draw();
+                if (viewMode == "play")
+                {
+                    setTimeout(update, 1000/60)
+                }
+            }
+
+        }
+
+        update();
+    </script>
+</body>
+</html>

@@ -14,8 +14,8 @@ function detectCircularCollision(object, scale)
 
 function detectRectangularCollision(object, scale)
 {
-    var overlapX = Math.abs((object.xPos + MAP_LEFT+ship.xPos + 25/2) - (SCREEN_MIDDLE.x + ship.width / 2)) < (25 / 2 + ship.width / 2 * scale);
-    var overlapY = Math.abs((object.yPos + MAP_TOP+ship.yPos + 40/2) - (SCREEN_MIDDLE.y + ship.height / 2)) < (40 / 2 + ship.height / 2 * scale);
+    var overlapX = Math.abs((object.xPos + MAP_LEFT+ship.xPos + 100/2) - (SCREEN_MIDDLE.x + ship.width / 2)) < (100 / 2 + ship.width / 2 * scale);
+    var overlapY = Math.abs((object.yPos + MAP_TOP+ship.yPos + 100/2) - (SCREEN_MIDDLE.y + ship.height / 2)) < (100 / 2 + ship.height / 2 * scale);
 
     if (overlapX && overlapY)
     {

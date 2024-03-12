@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <p id="timeStamp"></p>
+    <script>
+        let timeStamp = document.getElementById("timeStamp");
+        let canvas = document.getElementById("myCanvas");
+        let ctx = canvas.getContext("2d");
+
+        let radScale = 1000000; // 1:150000 = 1 pixel == 150 000 km
+        let massScale = 10**24;
+        let timeSpeed = 1 * 10**11;
+        let gravityOn = true;
+        let planetUpscale = 500;
+        let sunUpscale = 20;
+
+        canvas.width = 800;
+        canvas.height = 800;
+
+        let time = 0;
+
+        class Rock {constructor(xPos, yPos, rad, mass, color, xVelocity, yVelocity)
+        {
+            this.xPos = xPos;
+            this.yPos = yPos;
+            this.rad = rad;
+            this.mass = mass;
+            this.color = color;
+            this.xVelocity = xVelocity;
+            this.yVelocity = yVelocity;
+        }}
+        let rockArray = new Array();
+        let rockCount = 0;
+        let rockRemove = new Array();
+
+        let sunRad = 695700 / radScale * sunUpscale;
+        let sunMass = (1.989 * 10**30) / massScale;
+        let sunXpos = canvas.width/2;
+        let sunYpos = canvas.height/2;
+
+        let mercuryRad = 2440 / radScale * planetUpscale;
+        let mercuryMass = (3.285 * 10**23) / massScale;
+        let mercuryDis = 58000000 / radScale;
+
+        let venusRad = 6051.8 / radScale * planetUpscale;
+        let venusMass = (4.867 * 10**24) / massScale;
+        let venusDis = 108380000 / radScale;
+        
+        let earthRad = 6371 / radScale * planetUpscale;
+        let earthMass = (5.97219 * 10**24) / massScale;
+        let earthDis = 147380000 / radScale;
+
+        let marsRad = 3389.5 / radScale * planetUpscale;
+        let marsMass = (6.39 * 10**23) / massScale;
+        let marsDis = 217220000 / radScale;
+
+        let jupiterRad = 69911 / radScale * planetUpscale;
+        let jupiterMass = (1.89813 * 10**27) / massScale;
+        let jupiterDis = 778000000 / radScale;
+
+        let saturnRad = 58232 / radScale * planetUpscale;
+        let saturnMass = (5.683 * 10**26) / massScale;
+        let saturnDis = (1.4541 * 10**9) / radScale;
+
+        let uranusRad = 25362 / radScale * planetUpscale;
+        let uranusMass = (8.681 * 10**25) / massScale;
+        let uranusDis = (2.9322 * 10**9) / radScale;
+
+        let neptuneRad = 24622 / radScale * planetUpscale;
+        let neptuneMass = (1.024 * 10**26) / massScale;
+        let neptuneDis = 4498252900 / radScale;
+
+        let plutoRad = 1151 / radScale * planetUpscale;
+        let plutoMass = (1.309 * 10**22) / massScale;
+        let plutoDis = (5.9 * 10**9) / radScale;
+
+
+        rockArray.push(new Rock(sunXpos, sunYpos, 50, 1000, "yellow", 0, 0))
+
+        let initialVelocityRange = 2;
+        
+        for (let i = 0; i < 500; i++)
+        {
+            let rad = Math.random()*4+2;
+            rockArray.push(new Rock(Math.random()*canvas.width, Math.random()*canvas.height, rad, rad, "gray", Math.random()*initialVelocityRange-initialVelocityRange/2, Math.random()*initialVelocityRange-initialVelocityRange/2))
+        }
+        
+        /*
+        rockArray.push(new Rock(sunXpos+15+55, sunYpos, 2, 40, "lightgray", 0, 0));
+        rockArray.push(new Rock(sunXpos+15+105, sunYpos, 4, 80, "orange", 0, 0));
+        rockArray.push(new Rock(sunXpos+15+155, sunYpos, 5, 100, "turquoise", 0, -1.4)),
+        rockArray.push(new Rock(sunXpos+15+215, sunYpos, 3, 60, "red", 0, 0));
+        */
+        /*
+        rockArray.push(new Rock(sunXpos+sunRad+jupiterDis, sunYpos, jupiterRad, jupiterMass, "brown"));
+        rockArray.push(new Rock(sunXpos+sunRad+saturnDis, sunYpos, saturnRad, saturnMass, "beige"));
+        rockArray.push(new Rock(sunXpos+sunRad+uranusDis, sunYpos, uranusRad, uranusMass, "green"));
+        rockArray.push(new Rock(sunXpos+sunRad+neptuneDis, sunYpos, neptuneRad, neptuneMass, "blue"));
+        rockArray.push(new Rock(sunXpos+sunRad+plutoDis, sunYpos, plutoRad, plutoMass, "tan"));
+        */
+
+
+        function update()
+        {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            rockArray.forEach(function(object, index)
+            {
+                if (gravityOn)
+                {
+                    rockArray.forEach(function(obj, i)
+                    {
+                        if (object !== obj)
+                        {
+                            // Calculate the distance between the objects
+                            let disX = obj.xPos - object.xPos;
+                            let disY = obj.yPos - object.yPos;
+                            let dis = Math.sqrt(disX * disX + disY * disY);
+
+                            if (object.color == "turquoise")
+                            {
+                                if (obj.color == "yellow")
+                                {
+                                    //console.log(dis.toFixed(0))
+                                }
+                            }
+
+                             // Calculate the gravitational force
+                            let gravity = (6.674 * Math.pow(10, -11)) * (object.mass * obj.mass) / Math.pow(dis, 2); // Universal Gravitational Constant * (mass1 * mass2) / distance^2
+
+                            // Calculate the direction of the force
+                            let angleToAnotherRock = Math.atan2(disY, disX);
+                            let forceX = gravity * Math.cos(angleToAnotherRock);
+                            let forceY = gravity * Math.sin(angleToAnotherRock);
+
+                            // Apply the force to the current rock (object)
+                            object.xPos += forceX / object.mass * timeSpeed;
+                            object.yPos += forceY / object.mass * timeSpeed;
+
+                            // Apply the force to the other rock (obj) with opposite direction
+                            obj.xPos -= forceX / obj.mass * timeSpeed;
+                            obj.yPos -= forceY / obj.mass * timeSpeed;
+
+                            if (dis < Math.max(object.rad, obj.rad))
+                            {
+                                // Elastic collision response
+                                // Calculate relative velocity
+                                let relVelocityX = obj.xVelocity - object.xVelocity;
+                                let relVelocityY = obj.yVelocity - object.yVelocity;
+                                // Calculate dot product
+                                let dotProduct = relVelocityX * disX + relVelocityY * disY;
+                                // Calculate impulse
+                                let impulse = (2 * dotProduct) / (object.mass + obj.mass);
+                                // Apply impulse to update velocities
+                                object.xVelocity += impulse * disX / dis;
+                                object.yVelocity += impulse * disY / dis;
+                                obj.xVelocity -= impulse * disX / dis;
+                                obj.yVelocity -= impulse * disY / dis;
+
+                                let V1 = (4 / 3) * Math.PI * Math.pow(object.rad, 3);
+                                let V2 = (4 / 3) * Math.PI * Math.pow(obj.rad, 3);  
+                                let Vtotal = V1+V2;
+                                let rNew = Math.pow((Vtotal * 3) / (4 * Math.PI), 1 / 3);     
+
+                                if (object.rad > obj.rad)
+                                {
+                                    rockArray.splice(i, 1);
+                                    object.rad = rNew;
+                                    object.mass += obj.mass;
+                                }
+                                else if (object.rad < obj.rad)
+                                {
+                                    rockArray.splice(index, 1);
+                                    obj.rad = rNew;
+                                    obj.mass += object.mass;
+                                }
+                            }
+                        }
+                    });
+                }
+                // Update the positions of the objects
+                object.xPos += object.xVelocity;
+                object.yPos += object.yVelocity;
+
+                // Draw the objects on the canvas
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = object.color;
+                ctx.beginPath();
+                ctx.arc(object.xPos, object.yPos, object.rad, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            //time += timeSpeed;
+            //timeStamp.innerHTML = "Time: " + time + " years";
+
+            setTimeout(update, 1000/60);
+        }
+        update();
+    </script>
+</body>
+</html>
