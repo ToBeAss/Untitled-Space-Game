@@ -16,7 +16,7 @@
 * Changes
    * Changed enemy behaviour to flee when low on health
    * UI overhaul with more visual information
-### v0.2.0 (N/A) - UI Update
+#### v0.2.0 (N/A) - UI Update
 * New features
    * Added menu with basic settings
    * Custom cursor
