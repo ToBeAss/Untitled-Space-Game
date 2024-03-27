@@ -11,7 +11,7 @@
 			text-align: center;
 			background-color: steelblue;
 			font-family: monaco;
-			cursor: default;
+			cursor: none;
 		}
 		canvas {
 			position: absolute;
@@ -48,7 +48,8 @@
 	<script src="movement.js"></script>
 	<script src="collision.js"></script>
 	<script src="enemies.js"></script>
-	<script src="userInterface.js"></script>
+	<script src="ui/userInterface.js"></script>
+	<script src="ui/menu.js"></script>
 
     <script>
 		console.log(document.scripts)
@@ -222,6 +223,32 @@
 		let sections = MAP_SIZE/10;
 
 		var lasersAreFiring = false; // bruh
+
+
+		function update()
+		{
+			if (GAME_STATE == "won")
+			{
+				displayTextOnScreen("middle", 1, 50, "lime", "You Win")
+				displayTextOnScreen("middle", 3, 20, "white", "Reload page to play again")
+			}
+			if (GAME_STATE == "lost")
+			{
+				displayTextOnScreen("middle", 1, 50, "red", "Game Over")
+				displayTextOnScreen("middle", 3, 20, "white", "Reload page")
+			}
+			if (GAME_STATE == "paused")
+			{
+				updateMenu();
+			}
+			if (GAME_STATE == "playing")
+			{
+				//updateScreen();
+			}
+
+			setTimeout(update, GAME_UPDATE_SPEED);
+		}
+		update();
 
 
         function updateScreen ()
@@ -846,6 +873,10 @@
 			{
 				displayTextOnScreen("middle", 1, 50, "red", "Game Over")
 				displayTextOnScreen("middle", 3, 20, "white", "Reload page")
+			}
+			if (GAME_STATE == "paused")
+			{
+				updateMenu();
 			}
 			if (GAME_STATE == "playing")
 			{

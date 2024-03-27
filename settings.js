@@ -1,5 +1,8 @@
-const VERSION = "alpha 0.1.0";
 const GAME_MODE = "testing";
+
+const PLAYER_SETTINGS = {
+    resolution: 1470
+}
 
 const SCALE = 1; // 1 for intended scale
 

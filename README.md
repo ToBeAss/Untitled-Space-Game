@@ -8,7 +8,6 @@
 * Graphics
    * Simple canvas drawings
    * Nebulas and ships are imported images
-  
 #### v0.1.0 (13/03/2024) - The Gravity Update
 * New features
    * Added gravity between stellar bodies and simple ship attraction towards bodies
@@ -17,3 +16,7 @@
 * Changes
    * Changed enemy behaviour to flee when low on health
    * UI overhaul with more visual information
+### v0.2.0 (N/A) - UI Update
+* New features
+   * Added menu with basic settings
+   * Custom cursor

@@ -64,3 +64,34 @@ onkeyup = function (event)
         interact = false;
     }
 }
+
+var escaped = false;
+onkeypress = function (event)
+{
+    if (event.keyCode == 27) // Escape
+    {
+        event.preventDefault();
+        escaped = !escaped;
+        if (escaped && GAME_STATE == "playing") {GAME_STATE = "paused";}
+        else if (!escaped && GAME_STATE == "playing" || GAME_STATE == "paused") {GAME_STATE = "playing"; updateScreen();}
+    }
+}
+
+const MOUSE =
+{
+    x: 0,
+    y: 0,
+    click: false,
+    down: false
+}
+onclick = function()
+{
+    MOUSE.click = true;
+    setTimeout(function(){MOUSE.click=false;}, GAME_UPDATE_SPEED);
+}
+onmousemove = function(event)
+{
+    event.preventDefault();
+    MOUSE.x = parseInt(event.clientX);
+    MOUSE.y = parseInt(event.clientY);
+}
