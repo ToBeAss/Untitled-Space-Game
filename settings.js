@@ -6,9 +6,9 @@ const PLAYER_SETTINGS = {
 
 const SCALE = 1; // 1 for intended scale
 
-const SCREEN_WIDTH = 1470 * SCALE; // 1080 by default // 1470 max
+var SCREEN_WIDTH = 1470 * SCALE; // 1080 by default // 1470 max
 const SCREEN_RATIO = 16/9; // Standard 16:9
-const SCREEN_HEIGHT = SCREEN_WIDTH / SCREEN_RATIO;
+var SCREEN_HEIGHT = SCREEN_WIDTH / SCREEN_RATIO;
 
 const GAME_SPEED = 30; // 30 for intended speed
 const GAME_FPS = 60; // 60 by default

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Generation</title>
+    <style>
+        canvas
+        {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <script>
+        const canvas = document.getElementsByTagName("canvas");
+        const ctx = canvas[0].getContext("2d");
+        const comp = canvas[1].getContext("2d");
+        const step = canvas[2].getContext("2d");
+        const avg = canvas[3].getContext("2d");
+        const map = canvas[4].getContext("2d");
+        const mask = canvas[5].getContext("2d");
+
+        for (let i = 0; i < canvas.length; i++)
+        {
+            canvas[i].width = 1000;
+            canvas[i].height = 500;
+        }
+
+        
+        class Layer
+        {
+            constructor(layer, scale, weight)
+            {
+                this.layer = layer;
+                this.scale = scale;
+                this.weight = weight;
+            }
+        }
+
+        class Chunk
+        {
+            constructor(x, y, z, size)
+            {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.size = size;
+            }
+        }
+
+
+        function generateLayer(chunks, weight, size)
+        {
+            let layer = new Layer([], chunks, weight);
+            let chunkSize = size/chunks;
+
+            for (let x = 0; x < chunks; x++)
+            {
+                for (let y = 0; y < chunks/2; y++)
+                {
+                    let z = Math.random();
+                    layer.layer.push(new Chunk(x*chunkSize, y*chunkSize, z, chunkSize));
+                }
+            }
+            return layer;
+        }
+
+        function mergeLayers(layerA, layerB, offset)
+        {
+            let leastSignificantLayer, mostSignificantLayer;
+            if (layerA.scale < layerB.scale) {mostSignificantLayer = layerA; leastSignificantLayer = layerB;}
+            else {mostSignificantLayer = layerB; leastSignificantLayer = layerA;}
+
+            let mergedLayer = new Layer([], leastSignificantLayer.scale, 1);
+            
+            for (let i = 0; i < leastSignificantLayer.layer.length; i++)
+            {
+                let chunk = leastSignificantLayer.layer[i];
+                let parentChunk = null;
+                mostSignificantLayer.layer.forEach(function(parent)
+                {
+                    if (chunk.x >= parent.x && chunk.x+chunk.size <= parent.x+parent.size) {
+                        if (chunk.y >= parent.y && chunk.y+chunk.size <= parent.y+parent.size) {
+                            parentChunk = parent;
+                        }
+                    }
+                });
+                let alphaBelow = mostSignificantLayer.weight;
+                let alphaAbove = leastSignificantLayer.weight;
+
+                let blendedAlpha = alphaBelow + (1.0 - alphaBelow) * alphaAbove;
+                mergedLayer.weight = blendedAlpha;
+
+                let weightBelow = mostSignificantLayer.weight * alphaBelow;
+                let weightAbove = leastSignificantLayer.weight * blendedAlpha;
+
+                let noiseSum = parentChunk.z * weightBelow + chunk.z * weightAbove;
+                let adjustedNoise = noiseSum / (weightBelow + weightAbove) + offset;
+
+                mergedLayer.layer.push(new Chunk(chunk.x, chunk.y, adjustedNoise, chunk.size));
+            }
+
+            return mergedLayer;
+        }
+
+        function smoothenNoise(layer, iterations)
+        {
+            let smoothLayer = new Layer(layer.layer, layer.scale, layer.weight);;
+
+            for (let i = 0; i < iterations; i++)
+            {
+                smoothLayer = new Layer([], layer.scale, layer.weight);
+
+                layer.layer.forEach(function(chunk, index)
+                {
+                    const column = layer.scale/2;
+                    const row = 1;
+
+                    let currentColumn = Math.floor(index/column);
+                    let left, right, top, bottom;
+                    
+                    if (index-column < 0) {left = layer.layer[index+column*(layer.scale-1)];}
+                    else {left = layer.layer[index-column];}
+                    if (index+column >= layer.layer.length) {right = layer.layer[index-column*(layer.scale-1)]}
+                    else {right = layer.layer[index+column];}
+                    if (Math.floor((index-row)/column) != currentColumn) {top = layer.layer[0+column*(layer.scale-1)-index];}
+                    else {top = layer.layer[index-row];}
+                    if (Math.floor((index+row)/column) != currentColumn) {bottom = layer.layer[column-1+column*(layer.scale)-index-1];}
+                    else {bottom = layer.layer[index+row];}
+
+                    // test draw
+                    /*avg.fillStyle = "red";
+                    avg.fillRect(chunk.x, chunk.y, chunk.size, chunk.size);
+                    avg.fillStyle = "blue";
+                    avg.fillRect(left.x, left.y, left.size, left.size);
+                    avg.fillRect(right.x, right.y, right.size, right.size);
+                    avg.fillRect(top.x, top.y, top.size, top.size);
+                    avg.fillRect(bottom.x, bottom.y, bottom.size, bottom.size);*/
+
+                    let avgLeft = (chunk.z+left.z)/2;
+                    let avgRight = (chunk.z+right.z)/2;
+                    let avgTop = (chunk.z+top.z)/2;
+                    let avgBottom = (chunk.z+bottom.z)/2;
+        
+                    // should I also include corners? +4 chunks, / 8
+                    let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                    smoothLayer.layer.push(new Chunk(chunk.x, chunk.y, avgSum, chunk.size));
+                });
+                layer = smoothLayer;
+            }
+            return smoothLayer;
+        }
+
+        function draw(canvas, layer, weight)
+        {
+            layer.layer.forEach(function(chunk)
+            {
+                let colorValue = chunk.z * 255;
+                canvas.globalAlpha = weight;
+                canvas.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                canvas.fillRect(chunk.x, chunk.y, chunk.size, chunk.size);
+            });
+        }
+
+        function drawMap(canvas, layer, position, scale)
+        {
+            if (position == null) {position = {x: 0, y: 0};}
+            if (scale == null) {scale = 1;}
+            layer.layer.forEach(function(chunk)
+            {
+                if (chunk.z > 0.65) {canvas.fillStyle = "snow";}
+                else if (chunk.z > 0.625) {canvas.fillStyle = "darkgray";}
+                else if (chunk.z > 0.6) {canvas.fillStyle = "gray";}
+                else if (chunk.z > 0.55) {canvas.fillStyle = "green";}
+                else if (chunk.z > 0.515) {canvas.fillStyle = "lime";}
+                else if (chunk.z > 0.5) {canvas.fillStyle = "tan";}
+                else if (chunk.z > 0.475) {canvas.fillStyle = "#0096FF";}
+                else if (chunk.z > 0.35) {canvas.fillStyle = "blue";}
+                else {canvas.fillStyle = "darkblue";}
+                
+                canvas.globalAlpha = 1;
+                canvas.fillRect(position.x+chunk.x*scale, position.y+chunk.y*scale, chunk.size*scale, chunk.size*scale);
+            });
+        }
+
+        let layer1 = generateLayer(10, 1, 1000);
+        let layer2 = generateLayer(50, 0.75, 1000);
+        let layer3 = generateLayer(250, 0.5, 1000);
+
+        let layer12 = mergeLayers(layer1, layer2, 0);
+        draw(ctx, layer12, layer12.weight);
+
+        layer12 = smoothenNoise(layer12, 10); // 5
+        draw(comp, layer12, layer12.weight);
+
+        let noise = mergeLayers(layer12, layer3, -0.05); // -0.033
+        draw(step, noise, noise.weight);
+
+        let smoothNoise = smoothenNoise(noise, 20);
+        draw(avg, smoothNoise, smoothNoise.weight);
+
+        drawMap(map, smoothNoise);
+
+        let planetSize = 250;
+        let planetRotationSpeed = 1;
+        let planet1X = planetSize;
+        let planet2X = planetSize+canvas[0].width;
+        let sunAngle = 100;
+        function rotatePlanet()
+        {
+            mask.clearRect(0, 0, canvas[0].width, canvas[0].height);
+            mask.save();
+
+            mask.beginPath();
+            mask.arc(250, 250, planetSize, 0, Math.PI * 2, true);
+            //mask.arc(750, 250, planetSize, 0, Math.PI * 2, true);
+            mask.clip();
+            drawMap(mask, smoothNoise, {x: planet1X-planetSize, y: 0});
+            drawMap(mask, smoothNoise, {x: planet2X-planetSize, y: 0});
+
+            mask.globalAlpha = 0.75;
+            mask.fillStyle = "black";
+            mask.beginPath();
+            mask.moveTo(250-sunAngle, 0);
+            mask.lineTo(250+sunAngle, 500);
+            mask.lineTo(0, 500);
+            mask.lineTo(0, 0);
+            mask.lineTo(250, 0);
+            mask.fill();
+            /*mask.beginPath();
+            mask.moveTo(750+sunAngle, 0);
+            mask.lineTo(750-sunAngle, 500);
+            mask.lineTo(1000, 500);
+            mask.lineTo(1000, 0);
+            mask.lineTo(750, 0);
+            mask.fill();*/
+            mask.globalAlpha = 1;
+
+            planet1X-=planetRotationSpeed;
+            planet2X-=planetRotationSpeed;
+            if (planet1X < -planetSize*3) {planet1X = planetSize+canvas[0].width-planetRotationSpeed;}
+            if (planet2X < -planetSize*3) {planet2X = planetSize+canvas[0].width-planetRotationSpeed;}
+            mask.restore();
+
+            setTimeout(rotatePlanet, 1000/30);
+        }
+        rotatePlanet();
+
+        
+        /*let test = createMap(500, 3, 10, 5, 0.25);
+        drawMap(map, test);
+        drawMap(map, test, {x: 500, y: 0});
+        drawMap(map, flip(test), {x: 0, y: 250});
+        drawMap(map, flip(test), {x: 500, y: 250});
+
+        map.fillStyle = "black";
+        map.fillRect(0, 249, 1000, 2);
+        map.fillRect(499, 0, 2, 500);*/
+
+
+        function createMap(width, detailLevel, startingChunkSize, chunkSizeIteration, weightIteration)
+        {
+            let layers = new Array();
+            let chunkSize = startingChunkSize;
+            for (let i = 0; i < detailLevel; i++)
+            {
+                layers.push(generateLayer(chunkSize, 1-(weightIteration*i), width));
+                chunkSize *= chunkSizeIteration;
+            }
+
+            let finishedMerge;
+            let previousMerge;
+            for (let i = 0; i < detailLevel; i+=2)
+            {
+                let merged = layers[i];
+                if (i == 0)
+                {
+                    if (i != detailLevel - 1)
+                    {
+                        merged = mergeLayers(layers[i], layers[i+1], 0)
+                        merged = smoothenNoise(merged, 5); // need var
+                    }
+                }
+                else
+                {
+                    merged = mergeLayers(previousMerge, layers[i], 0);
+                    merged = smoothenNoise(merged, 5/weightIteration); // need var
+                }
+                previousMerge = merged;
+                finishedMerge = merged;
+            }
+            
+            return finishedMerge;
+        }
+
+        function flip(layer)
+        {
+            let flippedLayer = new Layer([], layer.scale, layer.weight);
+            const column = layer.scale/2
+            const row = 1;
+            layer.layer.forEach(function(chunk)
+            {
+                let newX = layer.scale*2-chunk.x-2;
+                let newY = layer.scale-chunk.y-2;
+                flippedLayer.layer.push(new Chunk(newX, newY, chunk.z, chunk.size));
+            });
+            return flippedLayer;
+        }
+    </script>
+</body>
+</html>

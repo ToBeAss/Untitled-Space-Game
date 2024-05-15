@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Generation</title>
+    <style>
+        canvas
+        {
+            border: 1px solid black;
+            margin-right: -5px;
+            margin-bottom: -5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <canvas></canvas>
+    <script>
+        const canvas = document.getElementsByTagName("canvas");
+
+        const rawNoise = canvas[0].getContext("2d");
+        const rawMap = canvas[1].getContext("2d");
+        const rawMapExt = canvas[2].getContext("2d");
+
+        const treatedNoise = canvas[3].getContext("2d");
+        const treatedMap = canvas[4].getContext("2d");
+        const treatedMapExt = canvas[5].getContext("2d");
+        const treatedMapFlip = canvas[6].getContext("2d");
+
+        var mapScale = 0.5
+        var showMapExtention = false;
+        var showMapFlipped = false;
+
+        if (!showMapExtention)
+        {
+            mapScale *= 2;
+            canvas[2].hidden = true;
+            canvas[5].hidden = true;
+        }
+        if (showMapFlipped)
+        {
+            mapScale *= 2.5;
+            canvas[6].hidden = false;
+        }
+
+        for (let i = 0; i < canvas.length; i++)
+        {
+            if (i % 3 == 0)
+            {
+                canvas[i].width = 1000;
+                canvas[i].height = 500;
+            }
+            else
+            {
+                canvas[i].width = 1000*mapScale;
+                canvas[i].height = 500*mapScale;
+            }
+        }
+
+        var amountOfChunks = 250;
+        var blockSize = canvas[0].width/amountOfChunks;
+
+        var reallyDeepSea = 0.475
+        var deepSea = 0.495;
+        var seaLevel = 0.500;
+        var grassLevel = 0.505;
+        var mountainLevel = 0.525;
+
+        class Chunk
+        {
+            constructor(x, y, z)
+            {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+        }
+        var chunks = new Array();
+
+        // RAW NOISE
+        for (let x = 0; x < amountOfChunks; x++)
+        {
+            let column = [];
+            for (let y = 0; y < amountOfChunks/2; y++)
+            {
+                let z = Math.random();
+                let chunk = new Chunk(x, y, z);
+                column.push(chunk);
+
+                let colorValue = z * 255;
+                rawNoise.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                rawNoise.fillRect(x*blockSize, y*blockSize, blockSize, blockSize);
+
+                if (chunk.z > mountainLevel)
+                {rawMap.fillStyle = "gray"; rawMapExt.fillStyle = "gray";}
+                else if (chunk.z > grassLevel) 
+                {rawMap.fillStyle = "green"; rawMapExt.fillStyle = "green";}
+                else if (chunk.z > seaLevel) 
+                {rawMap.fillStyle = "tan"; rawMapExt.fillStyle = "tan";}
+                else if (chunk.z > deepSea)
+                {rawMap.fillStyle = "#0096FF"; rawMapExt.fillStyle = "#0096FF";}
+                else if (chunk.z > reallyDeepSea)
+                {rawMap.fillStyle = "blue"; rawMapExt.fillStyle = "blue";}
+                else 
+                {rawMap.fillStyle = "darkblue"; rawMapExt.fillStyle = "darkblue";}
+                rawMap.fillRect(x*blockSize*mapScale, y*blockSize*mapScale, blockSize*mapScale, blockSize*mapScale);
+                rawMapExt.fillRect(x*blockSize*mapScale, y*blockSize*mapScale, blockSize*mapScale, blockSize*mapScale);
+            }
+            chunks.push(column);
+        }
+
+        // FIRST LAYER
+        let smootherChunks = chunks;
+        let smootheningAmount = 100;
+        for (let i = 0; i < smootheningAmount; i++) {smootherChunks = smoothenNoise(smootherChunks);}
+        for (let x = 0; x < smootherChunks.length; x++)
+        {
+            let column = smootherChunks[x];
+            for (let y = 0; y < column.length; y++)
+            {
+                let chunk = smootherChunks[x][y];
+                
+                let colorValue = chunk.z * 255;
+                treatedNoise.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                treatedNoise.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z > mountainLevel)
+                {treatedMap.fillStyle = "gray"; treatedMapExt.fillStyle = "gray";}
+                else if (chunk.z > grassLevel) 
+                {treatedMap.fillStyle = "green"; treatedMapExt.fillStyle = "green";}
+                else if (chunk.z > seaLevel) 
+                {treatedMap.fillStyle = "tan"; treatedMapExt.fillStyle = "tan";}
+                else if (chunk.z > deepSea)
+                {treatedMap.fillStyle = "#0096FF"; treatedMapExt.fillStyle = "#0096FF";}
+                else if (chunk.z > reallyDeepSea)
+                {treatedMap.fillStyle = "blue"; treatedMapExt.fillStyle = "blue";}
+                else 
+                {treatedMap.fillStyle = "darkblue"; treatedMapExt.fillStyle = "darkblue";}
+                treatedMap.fillRect(chunk.x*blockSize*mapScale, chunk.y*blockSize*mapScale, blockSize*mapScale, blockSize*mapScale);
+                treatedMapExt.fillRect(chunk.x*blockSize*mapScale, chunk.y*blockSize*mapScale, blockSize*mapScale, blockSize*mapScale);
+            }
+        }
+        if (showMapFlipped)
+        {
+            for (let x = smootherChunks.length-1; x >= 0; x--)
+            {
+                let column = smootherChunks[x];
+                for (let y = column.length-1; y >= 0; y--)
+                {
+                    let chunk = smootherChunks[x][y];
+
+                    if (chunk.z > mountainLevel)
+                    {treatedMapFlip.fillStyle = "gray"}
+                    else if (chunk.z > grassLevel) 
+                    {treatedMapFlip.fillStyle = "green"}
+                    else if (chunk.z > seaLevel) 
+                    {treatedMapFlip.fillStyle = "tan"}
+                    else if (chunk.z > deepSea)
+                    {treatedMapFlip.fillStyle = "#0096FF"}
+                    else if (chunk.z > reallyDeepSea)
+                    {treatedMapFlip.fillStyle = "blue"}
+                    else 
+                    {treatedMapFlip.fillStyle = "darkblue"}
+                    treatedMapFlip.fillRect((smootherChunks.length-1-chunk.x)*blockSize*mapScale, (column.length-1-chunk.y)*blockSize*mapScale, blockSize*mapScale, blockSize*mapScale);
+                }
+            }
+        }
+
+        // SECOND LAYER
+
+
+
+
+        // maybe include corners?
+        function smoothenNoise(chunks)
+        {
+            let newChunks = new Array();
+            for (let x = 0; x < chunks.length; x++)
+            {
+                let column = chunks[x];
+                let newColumn = [];
+                for (let y = 0; y < column.length; y++)
+                {
+                    let chunk = chunks[x][y];
+                    let left, right, top, bottom;
+
+                    if (x-1 < 0) {left = chunks[chunks.length-1][y]}
+                    else {left = chunks[x-1][y]}
+
+                    if (x+1 == chunks.length) {right = chunks[0][y]}
+                    else {right = chunks[x+1][y]}
+
+                    if (y-1 < 0) {top = chunks[chunks.length-1-x][y]}
+                    else {top = chunks[x][y-1]}
+
+                    if (y+1 == column.length) {bottom = chunks[chunks.length-1-x][y]}
+                    else {bottom = chunks[x][y+1]}
+
+                    // test to see neighbors
+                    /*
+                    if (chunk.z > 0.99)
+                    {
+                        treatedNoise.fillStyle = "blue";
+                        treatedNoise.fillRect(left.x*blockSize, left.y*blockSize, blockSize, blockSize);
+                        treatedNoise.fillRect(right.x*blockSize, right.y*blockSize, blockSize, blockSize);
+                        treatedNoise.fillRect(top.x*blockSize, top.y*blockSize, blockSize, blockSize);
+                        treatedNoise.fillRect(bottom.x*blockSize, bottom.y*blockSize, blockSize, blockSize);
+
+                        treatedNoise.fillStyle = "red";
+                        treatedNoise.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+                    }
+                    */
+
+                    let avgLeft = (chunk.z+left.z)/2;
+                    let avgRight = (chunk.z+right.z)/2;
+                    let avgTop = (chunk.z+top.z)/2;
+                    let avgBottom = (chunk.z+bottom.z)/2;
+        
+                    let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                    let newChunk = new Chunk(chunk.x, chunk.y, avgSum);
+                    newColumn.push(newChunk);
+                }
+                newChunks.push(newColumn);
+            }
+            return newChunks;
+        }
+
+    </script>
+</body>
+</html>

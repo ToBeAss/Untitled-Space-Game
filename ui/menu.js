@@ -1,4 +1,5 @@
 var hoveringOverButton = false;
+var menuPage = "main";
 function updateMenu()
 {
     canvas.userInterface.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -7,7 +8,7 @@ function updateMenu()
     canvas.userInterface.rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     if (canvas.userInterface.isPointInPath(MOUSE.x, MOUSE.y)) {hoveringOverButton = false;}
 
-    canvas.userInterface.fillStyle = "white";
+    canvas.userInterface.fillStyle = "lightblue";
     canvas.userInterface.strokeStyle = "steelblue";
     canvas.userInterface.lineWidth = 4;
     let menuWidth = SCREEN_WIDTH*0.2;
@@ -17,9 +18,25 @@ function updateMenu()
     canvas.userInterface.fill();
     canvas.userInterface.stroke();
 
-    displayTextOnScreen("middle", -5, 24, "black", "Menu");
-
-    createButtons(4, menuWidth, menuHeight, 1);
+    if (menuPage == "main")
+    {
+        let textArray = ["Main Menu", "Continue", "Settings", "Reload", "Quit"];
+        displayTextOnScreen("middle", -5, 24, "black", textArray[0]);
+        createButtons(4, menuWidth, menuHeight, 1, textArray);
+    }
+    else if (menuPage == "settings")
+    {
+        let textArray = ["Settings", "Video", "Audio", "Controls", "Back"];
+        displayTextOnScreen("middle", -5, 24, "black", textArray[0]);
+        createButtons(4, menuWidth, menuHeight, 1, textArray);
+    }
+    else if (menuPage == "video_settings")
+    {
+        let textArray = ["Video Settings", "", "", "", "Back"];
+        displayTextOnScreen("middle", -5, 24, "black", textArray[0]);
+        createButtons(1, menuWidth, menuHeight, 4, textArray);
+        videoSettings(menuWidth, menuHeight);
+    }
 
     // custom cursor
     let cursorSize = 10;
@@ -28,7 +45,7 @@ function updateMenu()
     canvas.userInterface.fillRect(MOUSE.x-cursorSize/2, MOUSE.y-cursorSize/2, cursorSize, cursorSize); // change to pixelart
 }
 
-function createButtons(amount, divWidth, divHeight, startingIndex)
+function createButtons(amount, divWidth, divHeight, startingIndex, textArray)
 {
     let buttonWidth = divWidth*0.9;
     let buttonHeight = divHeight*0.15;
@@ -51,9 +68,10 @@ function createButtons(amount, divWidth, divHeight, startingIndex)
         {
             // change cursor
             hoveringOverButton = true;
+            canvas.userInterface.fillStyle = "cornflowerblue";
             if (MOUSE.click)
             {
-                buttonLogic(buttonIndex);
+                buttonLogic(textArray[i]);
             }
         }
 
@@ -61,30 +79,59 @@ function createButtons(amount, divWidth, divHeight, startingIndex)
         canvas.userInterface.stroke();
 
         let textSize = 20;
-        let buttonText = ["Menu", "Continue", "Settings", "Reload", "Exit"];
-        displayText(buttonText[i], buttonX+buttonWidth/2-getTextLength(buttonText[i], textSize)/2, buttonY+buttonHeight/2+textSize/2-2, textSize, "black");
+        displayText(textArray[i], buttonX+buttonWidth/2-getTextLength(textArray[i], textSize)/2, buttonY+buttonHeight/2+textSize/2-2, textSize, "black");
     }
 }
 
-function buttonLogic(index)
+function buttonLogic(action)
 {
-    switch (index)
+    switch (action)
     {
-        case 1:
+        case "Continue":
             escaped = !escaped;
             if (escaped && GAME_STATE == "playing") {GAME_STATE = "paused";}
             else if (!escaped && GAME_STATE == "playing" || GAME_STATE == "paused") {GAME_STATE = "playing"; updateScreen();}
             break;
-        case 2:
-            console.log("Settings");
+        case "Settings":
+            menuPage = "settings";
             break;
-        case 3:
+        case "Reload":
             location.reload();
             break;
-        case 4:
+        case "Quit":
             let confirmed = confirm("Are you sure you want to exit the game?");
             if (confirmed) {window.close();}
             break;
+        case "Back":
+            menuPage = "main";
+            break;
+        case "Video":
+            menuPage = "video_settings";
+            break;
         default:
+    }
+}
+
+
+function videoSettings(divWidth, divHeight)
+{
+    let margin = 20;
+    let textSize = 18;
+    let buttonHeight = divHeight*0.15;
+    displayText("Resolution: ", SCREEN_WIDTH/2-divWidth/2+margin, SCREEN_HEIGHT/2-divHeight/2+margin+textSize+buttonHeight, textSize, "white");
+    canvas.userInterface.fillRect(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-divHeight/2+margin+buttonHeight, divWidth/2-margin, buttonHeight/2);
+    displayText("Fit to screen", SCREEN_WIDTH/2, SCREEN_HEIGHT/2-divHeight/2+margin+textSize+buttonHeight, textSize, "black");
+
+    canvas.userInterface.beginPath();
+    canvas.userInterface.rect(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-divHeight/2+margin+buttonHeight, divWidth/2-margin, buttonHeight/2)
+    if(canvas.userInterface.isPointInPath(MOUSE.x, MOUSE.y))
+    {
+        // change cursor
+        hoveringOverButton = true;
+        canvas.userInterface.fillStyle = "cornflowerblue";
+        if (MOUSE.click)
+        {
+            // fit to screen
+        }
     }
 }

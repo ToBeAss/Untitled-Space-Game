@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Generation</title>
+    <style>
+        canvas
+        {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <script>
+        const canvas = document.getElementsByTagName("canvas")[0];
+        const ctx = canvas.getContext("2d");
+
+        var canvasSize = 500;
+        var worldSize = 5;
+        var blockSize = canvasSize/worldSize;
+
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+
+        var weight = 0.8;
+
+        for (let x = 0; x < canvasSize; x+=blockSize)
+        {
+            for (let y = 0; y < canvasSize; y+=blockSize)
+            {
+                let z1 = Math.random();
+                let z2 = 0;
+                let z3 = 0;
+
+                for (let i = 0; i < blockSize; i+=blockSize/5)
+                {
+                    for (let j = 0; j < blockSize; j+=blockSize/5)
+                    {
+                        z2 = Math.random()*weight - weight/2;
+                        
+                        for (let a = 0; a < blockSize/5; a+=blockSize/5/5)
+                        {
+                            for (let b = 0; b < blockSize/5; b+=blockSize/5/5)
+                            {
+                                z3 = Math.random()*weight/10 - weight/10/2;
+
+                                let z = z1+z2+z3;
+                                let colorValue = z*255;
+
+                                ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                                if (z < 0.735) {ctx.fillStyle = "blue"}
+                                else {ctx.fillStyle = "green"}
+                                ctx.fillRect(x+i+a, y+j+b, blockSize/5/5, blockSize/5/5);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Generation</title>
+    <style>
+        canvas
+        {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas></canvas>
+    <canvas></canvas>
+
+    <canvas></canvas>
+    <canvas></canvas>
+
+    <canvas></canvas>
+    <canvas></canvas>
+
+    <canvas></canvas>
+    <canvas></canvas>
+
+    <canvas></canvas>
+    <canvas></canvas>
+    <script>
+        const canvas = document.getElementsByTagName("canvas");
+        const ctx0 = canvas[0].getContext("2d");
+        const ctx1 = canvas[1].getContext("2d");
+        const ctx2 = canvas[2].getContext("2d");
+        const ctx3 = canvas[3].getContext("2d");
+        const ctx4 = canvas[4].getContext("2d");
+        const ctx5 = canvas[5].getContext("2d");
+        const ctx6 = canvas[6].getContext("2d");
+        const ctx7 = canvas[7].getContext("2d");
+        const ctx8 = canvas[8].getContext("2d");
+        const ctx9 = canvas[9].getContext("2d");
+
+        var canvasSize = 500;
+        var worldSize = 100;
+        var blockSize = canvasSize/worldSize;
+
+        var seaLevel = 0.5;
+        var mountainLevel = 1;
+
+        for (let i = 0; i < canvas.length; i++)
+        {
+            canvas[i].width = canvasSize;
+            canvas[i].height = canvasSize;
+        }
+
+        class Chunk
+        {
+            constructor(x, y, z)
+            {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+        }
+        var chunks = new Array();
+
+        for (let x = 0; x < worldSize; x++)
+        {
+            let column = [];
+            for (let y = 0; y < worldSize; y++)
+            {
+                let z = Math.random();
+                let chunk = new Chunk(x, y, z);
+                column.push(chunk);
+
+                let colorValue = z * 255;
+                ctx0.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx0.fillRect(x*blockSize, y*blockSize, blockSize, blockSize);
+
+                if (z < seaLevel) {ctx1.fillStyle = "blue";}
+                else if (z > mountainLevel) {ctx1.fillStyle = "gray";}
+                else {ctx1.fillStyle = "green";}
+                ctx1.fillRect(x*blockSize, y*blockSize, blockSize, blockSize);
+            }
+            chunks.push(column);
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx2.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx2.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx3.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx3.fillStyle = "gray";}
+                else {ctx3.fillStyle = "green";}
+                ctx3.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx4.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx4.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx5.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx5.fillStyle = "gray";}
+                else {ctx5.fillStyle = "green";}
+                ctx5.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx6.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx6.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx7.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx7.fillStyle = "gray";}
+                else {ctx7.fillStyle = "green";}
+                ctx7.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+
+        for (let i = 0; i < chunks.length; i++)
+        {
+            let column = chunks[i];
+            for (let j = 0; j < column.length; j++)
+            {
+                let chunk = column[j];
+
+                let left, right, top, bottom;
+                if (i-1 >= 0) {left = chunks[i-1][j]}
+                else {left = chunks[chunks.length-1][j]}
+                if (i+1 < chunks.length) {right = chunks[i+1][j]}
+                else {right = chunks[0][j]}
+                if (j-1 >= 0) {top = chunks[i][j-1]}
+                else {top = chunks[i][column.length-1]}
+                if (j+1 < column.length) {bottom = chunks[i][j+1]}
+                else {bottom = chunks[i][0]}
+
+                let avgLeft = (chunk.z+left.z)/2;
+                let avgRight = (chunk.z+right.z)/2;
+                let avgTop = (chunk.z+top.z)/2;
+                let avgBottom = (chunk.z+bottom.z)/2;
+    
+                let avgSum = (avgLeft+avgRight+avgBottom+avgTop)/4;
+                chunk.z = avgSum;
+
+                let colorValue = chunk.z * 255;
+                ctx8.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx8.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+
+                if (chunk.z < seaLevel) {ctx9.fillStyle = "blue";}
+                else if (chunk.z > mountainLevel) {ctx9.fillStyle = "gray";}
+                else {ctx9.fillStyle = "green";}
+                ctx9.fillRect(chunk.x*blockSize, chunk.y*blockSize, blockSize, blockSize);
+            }
+        }
+    </script>
+</body>
+</html>
