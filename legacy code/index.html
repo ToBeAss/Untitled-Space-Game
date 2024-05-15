@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Game</title>
+    <style>
+        body {
+			margin: 0;
+			text-align: center;
+			background-color: steelblue;
+			font-family: monaco;
+			cursor: default;
+		}
+		canvas {
+			position: absolute;
+			border: 0;
+			left: 0;
+			top: 0;
+		}
+		#version {
+			color: white;
+			font-size: small;
+			position: absolute;
+			bottom: 0;
+			margin-left: 10px;
+		}
+    </style>
+</head>
+<body>
+	<canvas id="background"></canvas>
+	<canvas id="middleground"></canvas>
+    <canvas id="foreground"></canvas>
+	<canvas id="playerCamera"></canvas>
+	<canvas id="userInterface"></canvas>
+	<canvas id="minimap"></canvas>
+
+	<p id="version">Alpha v0.1.0</p>
+
+	<script src="settings.js"></script>
+	<script src="player.js"></script>
+	<script src="commonMethods.js"></script>
+	<script src="text.js"></script>
+	<script src="background.js"></script>
+	<script src="rocks.js"></script>
+	<script src="input.js"></script>
+	<script src="movement.js"></script>
+	<script src="collision.js"></script>
+	<script src="enemies.js"></script>
+	<script src="userInterface.js"></script>
+
+    <script>
+		console.log(document.scripts)
+
+		const HTML_CANVAS = document.getElementsByTagName("canvas"); // An array of HTML Canvas Elements
+		var canvas = { // An object of Canvas Contexts (Remember to write by HTML order)
+			background: null,
+			middleground: null,
+			foreground: null,
+			playerCamera: null,
+			userInterface: null,
+			minimap: null 
+		}
+
+		function assignCanvases ()
+		{
+			let index = 0;
+			for (const key in canvas) {
+				if (canvas.hasOwnProperty(key)) {
+					canvas[key] = HTML_CANVAS[index].getContext("2d");
+					index++;
+					console.log(`canvas.${key}: ${canvas[key]}`);
+				}
+			}
+		}
+		function scaleCanvases ()
+		{
+			for (let i = 0; i < HTML_CANVAS.length; i++)
+			{
+				if (i == 5) 
+				{
+					HTML_CANVAS[i].width = MAP_MINIMAP_SIZE;
+					HTML_CANVAS[i].height = MAP_MINIMAP_SIZE;
+					HTML_CANVAS[i].style.top = 20 * SCALE + "px";
+					HTML_CANVAS[i].style.left = SCREEN_WIDTH - MAP_MINIMAP_SIZE - 20*SCALE + "px";
+				}
+				else
+				{
+					HTML_CANVAS[i].width = SCREEN_WIDTH;
+					HTML_CANVAS[i].height = SCREEN_HEIGHT;
+				}
+			}
+		}
+		assignCanvases();
+		scaleCanvases();
+
+		
+		var missions = [
+			{name: "Collect fuel", completed: 0, goal: 15}, 
+			{name: "Kill enemies", completed: 0, goal: 3},
+			{name: "Visit planets", completed: 0, goal: 3}
+		]
+			/*collectFuel: [0, 15],
+			collectUpgrades: [0, 2],
+			killEnemies: [0, 3]
+		}*/
+
+
+		var images = {
+			ship: "images/ship.png",
+			nebula1: "images/nebula1.png",
+			nebula2: "images/nebula2.png",
+			stars1: "images/stars1.png",
+			enemy: "images/enemy.png",
+			boost: "images/boost3.png"
+		};
+
+		function getImages()
+		{
+			for (const key in images) {
+				if (images.hasOwnProperty(key)) {
+					src = images[key];
+					images[key] = new Image();
+					images[key].src = src;
+					console.log(`images.${key}: ${images[key].src}`);
+				}
+			}
+		}
+		getImages();
+
+		var sounds = {
+			ship: "sounds/ship.mp3",
+			pickup: "sounds/pickup.mp3"
+		};
+
+		function getSounds()
+		{
+			for (const key in sounds) {
+				if (sounds.hasOwnProperty(key)) {
+					src = sounds[key];
+					sounds[key] = new Audio();
+					sounds[key].src = src;
+					console.log(`sounds.${key}: ${sounds[key].src}`);
+				}
+			}
+		}
+		getSounds();
+
+
+		
+
+		/*
+			class Nebula {constructor(image, xPos, yPos, width, height, z)
+			{
+				this.image = image;
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.width = width;
+				this.height = height;
+				this.z = z;
+			}}
+			let nebulaArray = new Array();
+			let nebulaCount = 0;
+
+			while (nebulaCount < 100)
+			{
+				nebulaCount++;
+				// Needs change
+					let z = 0.25;
+					let image = images.nebula1;
+					if (nebulaCount >= 50) {image = images.nebula2; z = 0.5;}
+					if (nebulaCount >= 75) {image = images.stars1; z = 1;}
+				nebulaArray.push(new Nebula(image, (Math.random()*MAP_SIZE-(MAP_SIZE/2))-MAP_LEFT, (Math.random()*MAP_SIZE-(MAP_SIZE/2))-MAP_TOP, 2000, 2000, z));
+			}
+		*/
+		/*
+			class Rock {constructor(xPos, yPos, rad, collision, color, interacted)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.rad = rad;
+				this.collision = collision;
+				this.color = color;
+				this.interacted = interacted;
+			}}
+			let rockArray = new Array();
+			let rockCount = 0;
+			let rockRemove = new Array();
+
+			while (rockCount < 50)
+			{
+				rockCount++;
+				interacted = true;
+				color = "gray";
+				if (rockCount == 49) {color = "tan"; interacted = false}
+				if (rockCount == 50) {color = "green"; interacted = false}
+				rockArray.push(new Rock(Math.random()*MAP_SIZE, Math.random()*MAP_SIZE, Math.random()*100+50, false, color, interacted))
+			}
+			*/
+
+			class Boost {constructor(xPos, yPos)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+			}}
+			let boostArray = new Array();
+			let boostCount = 0;
+
+			class Laser {constructor(xPos, yPos, rotation, speed, distance)
+			{
+				this.xPos = xPos;
+				this.yPos = yPos;
+				this.rotation = rotation;
+				this.speed = speed;
+				this.distance = distance;
+			}}
+			let laserArray = new Array();
+			let laserCount = 0;
+
+
+		let sections = MAP_SIZE/10;
+
+		var lasersAreFiring = false; // bruh
+
+
+        function updateScreen ()
+        {
+			// might be a problem as i only update the visible screen
+            canvas.background.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            canvas.background.save();
+
+			canvas.middleground.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+			canvas.foreground.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+			canvas.playerCamera.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+			canvas.userInterface.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+			canvas.minimap.clearRect(0, 0, MAP_MINIMAP_SIZE, MAP_MINIMAP_SIZE);
+
+			// if (Math.round(ship.rotation)%360 == 0) {} // Use to find rotation direction
+
+			detectMovement();
+
+			//canvas.foreground.fillRect(MAP_LEFT+ship.xPos-25, MAP_TOP+ship.yPos-25, 50, 50);
+
+
+			canvas.minimap.fillStyle = "black";
+			canvas.minimap.fillRect(0, 0, 200, 200);
+
+
+			//canvas.background.translate(MAP_LEFT+MAP_SIZE/2, MAP_TOP+MAP_SIZE/2)
+			//canvas.background.translate(SCREEN_MIDDLE.x+(ship.width/2), SCREEN_MIDDLE.y+(ship.height/2));
+			canvas.playerCamera.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+			canvas.playerCamera.rotate(-ship.rotationSpeed * Math.PI / 180); // ship.rotation if background
+			canvas.playerCamera.translate(-SCREEN_WIDTH/2, -SCREEN_HEIGHT/2)
+			//canvas.background.translate(-SCREEN_MIDDLE.x-(ship.width/2), -SCREEN_MIDDLE.y-(ship.height/2));
+			//canvas.background.translate(-(MAP_LEFT+MAP_SIZE/2), -(MAP_TOP+MAP_SIZE/2))
+
+			//canvas.background.translate(MAP_LEFT+MAP_SIZE/2, MAP_TOP+MAP_SIZE/2)
+			//canvas.background.translate(-(MAP_LEFT+MAP_SIZE/2), -(MAP_TOP+MAP_SIZE/2))
+
+			//canvas.background.fillRect(MAP_LEFT+ship.xPos, MAP_TOP+ship.yPos, MAP_SIZE, MAP_SIZE);
+
+			
+			if (gridView)
+			{
+				for (let i = 0; i <= MAP_SIZE/sections; i++)
+				{
+					// vertical
+					canvas.foreground.strokeStyle = "red";
+					canvas.foreground.beginPath(); // Start a new path
+					canvas.foreground.moveTo(i*sections+MAP_LEFT+ship.xPos, 0+MAP_TOP+ship.yPos); // Move the pen to (30, 50)
+					canvas.foreground.lineTo(i*sections+MAP_LEFT+ship.xPos, MAP_SIZE+MAP_TOP+ship.yPos); // Draw a line to (150, 100)
+					canvas.foreground.stroke(); // Render the path
+
+					canvas.minimap.strokeStyle = "red";
+					canvas.minimap.beginPath(); // Start a new path
+					canvas.minimap.moveTo(i*sections/75, 0); // Move the pen to (30, 50)
+					canvas.minimap.lineTo(i*sections/75, 200); // Draw a line to (150, 100)
+					canvas.minimap.stroke(); // Render the path
+				}
+				for (let i = 0; i <= MAP_SIZE/sections; i++)
+				{
+					// horizontal
+					canvas.foreground.strokeStyle = "red";
+					canvas.foreground.beginPath(); // Start a new path
+					canvas.foreground.moveTo(MAP_LEFT+ship.xPos, i*sections+MAP_TOP+ship.yPos); // Move the pen to (30, 50)
+					canvas.foreground.lineTo(MAP_SIZE+MAP_LEFT+ship.xPos, i*sections+MAP_TOP+ship.yPos); // Draw a line to (150, 100)
+					canvas.foreground.stroke(); // Render the path
+
+					canvas.minimap.strokeStyle = "red";
+					canvas.minimap.beginPath(); // Start a new path
+					canvas.minimap.moveTo(0, i*sections/75); // Move the pen to (30, 50)
+					canvas.minimap.lineTo(200, i*sections/75); // Draw a line to (150, 100)
+					canvas.minimap.stroke(); // Render the path
+				}
+			}
+
+
+			
+			drawBackground();
+
+			handleBodies();
+			
+			/*
+			rockArray.forEach(function(object, index)
+			{
+				canvas.foreground.globalAlpha = 1;
+				canvas.foreground.fillStyle = object.color;
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(object.xPos+MAP_LEFT+ship.xPos, object.yPos+MAP_TOP+ship.yPos, object.rad, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+
+				canvas.minimap.fillStyle = object.color;
+				canvas.minimap.beginPath();
+				canvas.minimap.arc(object.xPos/75, object.yPos/75, object.rad/75*6, 0, 2 * Math.PI);
+				canvas.minimap.fill();
+
+
+				// hitbox of ship when hitting things
+				/*
+				canvas.foreground.fillStyle = "white";
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(SCREEN_MIDDLE.x+ship.width/2, SCREEN_MIDDLE.y+ship.width/2, ship.width/2 * collisionRange, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+				*/
+
+				// EXPERIMENTAL
+				/*
+				rockArray.forEach(function(obj, i)
+				{
+					if (object !== obj) { // Ensure we're not comparing the same rock to itself
+						var disX = object.xPos - obj.xPos;
+						var disY = object.yPos - obj.yPos;
+						var dis = Math.sqrt(disX * disX + disY * disY);
+
+						// Calculate combined "mass" based on radii
+						var combinedMass = object.rad * obj.rad;
+
+						const thresholdDistance = 10000; // Adjust this value based on your requirements
+
+						// Check if rocks are close enough for gravity to take effect
+						if (dis < thresholdDistance) {
+							displayX = object.xPos+MAP_LEFT+ship.xPos;
+							displayY = object.yPos + MAP_TOP+ship.yPos;
+
+							let angleToAnotherRock = Math.atan2(disY, disX);
+							
+							// Apply gravitational force
+							let time = 1;
+							let gravity = combinedMass / (dis * dis); // Adjust the factor according to your requirements
+
+							if (dis < Math.max(object.rad, obj.rad)) {
+								// Merge the rocks together or apply some other action
+								if (object.rad > obj.rad)
+								{
+									rockRemove.push(i)
+									object.rad += obj.rad / 2;
+								}
+								else if (object.rad < obj.rad)
+								{
+									rockRemove.push(index)
+									obj.rad += object.rad / 2;
+								}
+							}
+							else
+							{
+								// Apply gravitational force to the current rock (object)
+								object.xPos -= gravity*time * Math.cos(angleToAnotherRock);
+								object.yPos -= gravity*time * Math.sin(angleToAnotherRock);
+							}
+
+							// Optionally, you can visualize or debug here
+							let forceX = Math.min(gravity * 5000, 100) * Math.cos(angleToAnotherRock);
+							let forceY = Math.min(gravity * 5000, 100) * Math.sin(angleToAnotherRock);
+
+							canvas.foreground.beginPath();
+							canvas.foreground.moveTo(MAP_LEFT+object.xPos+ship.xPos, MAP_TOP+object.yPos+ship.yPos);
+							canvas.foreground.lineTo(MAP_LEFT+object.xPos+ship.xPos - forceX, MAP_TOP+object.yPos+ship.yPos - forceY);
+							canvas.foreground.strokeStyle = "rgba(255, 0, 0, 0.5)"; // Red with some transparency
+							canvas.foreground.lineWidth = 2;
+							canvas.foreground.stroke();
+						}
+					}
+					for (let i = 0; i < rockRemove.length; i++)
+					{
+						rockArray.splice(rockRemove[i], 1);
+						rockRemove.splice(i, 1);
+						rockCount--;
+						console.log(rockCount)
+					}
+				});*/
+
+
+				// gravity
+				/*
+				if (detectCircularCollision(object, object.rad/100*10))
+				{
+					// Get distance
+					var distanceX = (object.xPos + MAP_LEFT+ship.xPos) - (SCREEN_MIDDLE.x + ship.width / 2);
+					var distanceY = (object.yPos + MAP_TOP+ship.yPos) - (SCREEN_MIDDLE.y + ship.height / 2);
+					var distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+					// Calculate vectors from ship to rock
+					let rockToShipVector = {
+						x: (MAP_LEFT + object.xPos + ship.xPos) - SCREEN_MIDDLE.x - ship.width / 2,
+						y: (MAP_TOP + object.yPos + ship.yPos) - SCREEN_MIDDLE.y - ship.height / 2
+					};
+
+					// Calculate the angle between ship and rock
+					let angleToRock = Math.atan2(rockToShipVector.y, rockToShipVector.x);
+
+					// Move the ship towards the rock
+					if (distance < object.rad)
+					{gravity = object.rad / object.rad * 2.5}
+					else
+					{
+						gravity = object.rad / distance * 2.5;
+					}
+					ship.xPos -= gravity * Math.cos(angleToRock);
+					ship.yPos -= gravity * Math.sin(angleToRock);
+				}
+				*/
+				/*
+				// COLLISION SHIP
+				if (object.color != "gray")
+				{
+					if (detectCircularCollision(object, pickupRange))
+					{
+						displayX = object.xPos+MAP_LEFT+ship.xPos;
+						displayY = object.yPos + MAP_TOP+ship.yPos;
+						if (interact && !object.interacted)
+						{
+							object.interacted = true;
+							ship.boostCapacity += 100;
+							mission.collectUpgrades[0]++;
+							//sounds.pickup.play();
+						}
+						else if (interact || object.interacted)
+						{
+							displayTextOnMap(displayX, displayY, "Upgrade Collected")
+						}
+						else if (!object.interacted)
+						{
+							displayTextOnMap(displayX, displayY, "[E] Collect Upgrade")
+						}					
+					}
+				}
+				else
+				{
+					if (detectCircularCollision(object, collisionRange))
+					{
+						canvas.foreground.fillStyle = "red";
+						canvas.foreground.beginPath();
+						canvas.foreground.arc(SCREEN_MIDDLE.x+ship.width/2, SCREEN_MIDDLE.y+ship.width/2, ship.width/2 * collisionRange, 0, 2 * Math.PI);
+						canvas.foreground.fill();
+
+						// sticky rocks
+						/*
+						ship.xPos += ship.speed * Math.sin(-ship.rotation * Math.PI / 180); // rotationspeed
+        				ship.yPos -= ship.speed * Math.cos(-ship.rotation * Math.PI / 180);
+						*/
+					/*
+						if (ship.health > 0)
+						{
+							if (ship.speed >= 0)
+							{
+								ship.health -= ship.speed + 1;
+							}
+							else
+							{
+								ship.health += ship.speed + 1;
+							}
+						}
+						else
+						{
+							// GAME OVER
+							GAME_STATE = "lost";
+						}
+					}
+				}
+
+				// COLLISION ENEMY
+				enemyArray.forEach(function(obj, i)
+				{
+					let eDisX = (object.xPos + MAP_LEFT+ship.xPos) - (MAP_LEFT+obj.xPos+ship.xPos+obj.width/2);
+					let eDisY = (object.yPos + MAP_TOP+ship.yPos) - (MAP_TOP+obj.yPos+ship.yPos+obj.height/2);
+					let dis = Math.sqrt(eDisX * eDisX + eDisY * eDisY);
+
+					if (dis < object.rad + Math.min(obj.width * collisionRange, obj.height * collisionRange) / 2)
+					{
+						canvas.foreground.fillStyle = "red";
+						canvas.foreground.beginPath();
+						canvas.foreground.arc(MAP_LEFT+obj.xPos+ship.xPos+obj.width/2, MAP_TOP+obj.yPos+ship.yPos+obj.height/2, obj.width/2 * collisionRange, 0, 2 * Math.PI);
+						canvas.foreground.fill();
+
+						if (obj.health > 0)
+						{
+							obj.health -= obj.speed + 1;
+						}
+						else
+						{
+							// ENEMY DIES
+							enemyArray.splice(i, 1);
+							enemyCount--;
+							mission.killEnemies[0]++;
+						}
+					}
+				});
+			});
+			*/
+
+			while (boostCount < 100)
+			{
+				boostCount++;
+				boostArray.push(new Boost(Math.random()*MAP_SIZE, Math.random()*MAP_SIZE))
+			}
+			boostArray.forEach(function(object, index)
+			{
+				//canvas.foreground.globalAlpha = 1;
+				//canvas.foreground.fillStyle = "yellow";
+				//canvas.foreground.fillRect(object.xPos+MAP_LEFT+ship.xPos, object.yPos+MAP_TOP+ship.yPos, 25, 40);
+				canvas.foreground.drawImage(images.boost, object.xPos+MAP_LEFT+ship.xPos, object.yPos+MAP_TOP+ship.yPos, 100, 100)
+
+				canvas.minimap.fillStyle = "yellow";
+				let minimapScale = 8;
+				canvas.minimap.fillRect(object.xPos/75-25/75*minimapScale/2, object.yPos/75-40/75*minimapScale/2, 25/75*minimapScale, 40/75*minimapScale);
+
+
+				// hitbox of ship when picking up items
+				/*
+				canvas.foreground.fillStyle = "white";
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(SCREEN_MIDDLE.x+ship.width/2, SCREEN_MIDDLE.y+ship.width/2, ship.width/2 * pickupRange, 0, 2 * Math.PI);
+				canvas.foreground.fill();
+				canvas.foreground.fillRect(SCREEN_MIDDLE.x-ship.width/2*pickupRange/4, SCREEN_MIDDLE.y-ship.height/2*pickupRange/4, ship.width*pickupRange, ship.height*pickupRange)
+				*/
+
+				// COLLISION
+				if (detectRectangularCollision(object, pickupRange)) {
+					// collision detected
+					if (ship.boostTank != ship.boostCapacity)
+					{
+						// able to pick up boost
+						if (ship.boostCapacity - ship.boostTank <= 50)
+						{
+							ship.boostTank += ship.boostCapacity - ship.boostTank;
+						}
+						else
+						{
+							ship.boostTank += 50;
+						}
+						boostArray.splice(index, 1);
+						boostCount--;
+						/*let sound = new Audio(sounds.pickup);
+						sound.play();*/
+						//sounds.pickup.play();
+						//mission.collectFuel[0]++;
+						missions[0].completed++;
+					}
+				}
+			});
+
+			canvas.minimap.fillStyle = "lime";
+			canvas.minimap.fillRect((SCREEN_MIDDLE.x-MAP_LEFT-ship.xPos)/75-(ship.width/75*6)/2, (SCREEN_MIDDLE.y-MAP_TOP-ship.yPos)/75-(ship.height/75*6)/2, ship.width/75*6, ship.height/75*6)
+
+
+			// motion trail
+			storeLastPosition(ship.xPos, ship.yPos, ship.rotation, shipPositions);
+			
+			for (var i = 0; i < shipPositions.length; i++) 
+			{
+				var ratio = (i + 1) / shipPositions.length;
+
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(SCREEN_MIDDLE.x+ship.xPos-shipPositions[i].x+ship.width/2, SCREEN_MIDDLE.y+ship.yPos-shipPositions[i].y+ship.height/2, 7.5, 0, 2 * Math.PI, true);
+				if (ship.speed > 5.2) {canvas.foreground.fillStyle = "rgba(255, 255, 0, " + ratio / 2 + ")";}
+				else {canvas.foreground.fillStyle = "rgba(255, 255, 255, " + ratio / 2 + ")";}
+				canvas.foreground.fill();
+			}
+
+			// shooting
+			if (blasters && !blastCooldown && ship.energyStore > 1)
+			{
+				blastCooldown = true;
+				setTimeout(function(){blastCooldown = false;}, 150)
+				laserArray.push(new Laser(MAP_SIZE/2-ship.xPos, MAP_SIZE/2-ship.yPos, shipPositions[shipPositions.length-1].rotation, 15, 0))
+				laserCount++;
+			}
+			if (blasters && ship.energyStore > 1)
+			{
+				lasersAreFiring = true; // this is shit. look line 220
+				ship.energyStore -= ship.energyConsumption;
+			}
+			else {lasersAreFiring = false;}
+
+			
+			handleEnemies();
+
+			/*
+		//enemy
+			//collision
+			distanceX = (enemy.xPos + MAP_LEFT+ship.xPos + enemy.width/2) - (SCREEN_MIDDLE.x + ship.width / 2);
+			distanceY = (enemy.yPos + MAP_TOP+ship.yPos + enemy.height/2) - (SCREEN_MIDDLE.y + ship.height / 2);
+			distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+			if (distance < enemy.vision + Math.min(ship.width, ship.height) / 2)
+			{
+				//spotted
+				
+				// accelerate speed
+				if (enemy.speed < enemy.maxSpeed) {enemy.speed += enemy.acceleration;}
+            	else {enemy.speed = enemy.maxSpeed;}
+				
+				//turning
+
+				let angle = drawLinesAndCalculateAngle(enemy);
+
+				//let angle = -calculateDefaultAngle({x: MAP_LEFT+enemy.xPos+ship.xPos+enemy.width/2, y: MAP_TOP+enemy.yPos+ship.yPos+enemy.height/2}, {x: SCREEN_MIDDLE.x + ship.width / 2, y: SCREEN_MIDDLE.y + ship.height / 2});
+				//enemy.rotation = -calculateDefaultAngle({x: MAP_LEFT+enemy.xPos+ship.xPos+enemy.width/2, y: MAP_TOP+enemy.yPos+ship.yPos+enemy.height/2}, {x: SCREEN_MIDDLE.x + ship.width / 2, y: SCREEN_MIDDLE.y + ship.height / 2});
+				//enemy.rotationSpeed = enemy.maxRotationSpeed
+				if (angle > 10) // left
+				{
+					// accelerate rotation
+					if (enemy.rotationSpeed > -enemy.maxRotationSpeed) {enemy.rotationSpeed -= enemy.rotationAcceleration}
+					else {enemy.rotationSpeed = -enemy.maxRotationSpeed;}
+					enemy.rotation += enemy.rotationSpeed;
+				}
+				else if (angle < -10) // right
+				{
+					// accelerate rotation
+					if (enemy.rotationSpeed < enemy.maxRotationSpeed) {enemy.rotationSpeed += enemy.rotationAcceleration}
+					else {enemy.rotationSpeed = enemy.maxRotationSpeed;}
+					enemy.rotation += enemy.rotationSpeed;
+				}
+				else // in line of sight
+				{	
+					// decellerate rotation
+					if (enemy.rotationSpeed > 0.1) {enemy.rotationSpeed -= enemy.rotationAcceleration}
+					else if (enemy.rotationSpeed < -0.1) {enemy.rotationSpeed += enemy.rotationAcceleration}
+					else {enemy.rotationSpeed = 0;}
+					enemy.rotation += enemy.rotationSpeed;
+
+					if (!enemyCooldown)
+					{
+						// fire
+						enemyCooldown = true;
+						setTimeout(function(){enemyCooldown = false;}, 150)
+						laserArray.push(new Laser(enemy.xPos+enemy.width/2, enemy.yPos+enemy.height/2, -enemyPositions[enemyPositions.length-1].rotation, 0))
+						laserCount++;
+					}
+				}
+			}
+			else
+			{
+				// decellerate speed
+				if (enemy.speed > enemy.maxSpeed+0.1) {enemy.speed -= enemy.acceleration;}
+        		else if (enemy.speed > 0.1) {enemy.speed -= enemy.speed*enemy.deceleration;} // Deceleration value
+        		else {enemy.speed = 0;}
+			}
+			canvas.enemies.save();
+			// rotation
+			canvas.enemies.translate((MAP_LEFT+enemy.xPos+ship.xPos)+enemy.width/2, (MAP_TOP+enemy.yPos+ship.yPos)+enemy.height/2)
+			canvas.enemies.rotate(enemy.rotation * Math.PI / 180);
+			canvas.enemies.translate(-((MAP_LEFT+enemy.xPos+ship.xPos)+enemy.width/2), -((MAP_TOP+enemy.yPos+ship.yPos)+enemy.height/2))
+			
+			canvas.enemies.drawImage(enemy.image, MAP_LEFT+enemy.xPos+ship.xPos, MAP_TOP+enemy.yPos+ship.yPos, enemy.width, enemy.height);
+			
+			canvas.enemies.restore();
+
+			//movement
+			enemy.xPos += enemy.speed * Math.sin(enemy.rotation * Math.PI / 180);
+        	enemy.yPos -= enemy.speed * Math.cos(enemy.rotation * Math.PI / 180);
+
+			canvas.minimap.fillStyle = "red";
+			canvas.minimap.fillRect((enemy.xPos)/75-(enemy.width/75*6)/2, (enemy.yPos)/75-(enemy.height/75*6)/2, enemy.width/75*6, enemy.height/75*6)
+
+			storeLastPosition(enemy.xPos, enemy.yPos, enemy.rotation, enemyPositions);
+			
+			for (var i = 0; i < enemyPositions.length-1; i++) 
+			{
+				var ratio = (i + 1) / enemyPositions.length;
+
+				canvas.foreground.beginPath();
+				canvas.foreground.arc(MAP_LEFT+ship.xPos+enemyPositions[i].x+enemy.width/2, MAP_TOP+ship.yPos+enemyPositions[i].y+enemy.height/2, 7.5, 0, 2 * Math.PI, true);
+				if (enemy.speed > 5.2) {canvas.foreground.fillStyle = "rgba(255, 255, 0, " + ratio / 2 + ")";}
+				else {canvas.foreground.fillStyle = "rgba(255, 255, 255, " + ratio / 2 + ")";}
+				canvas.foreground.fill();
+			}
+			*/
+		
+
+			laserArray.forEach(function(object, index)
+			{
+				object.xPos -= object.speed * Math.sin(object.rotation * Math.PI / 180);
+        		object.yPos -= object.speed * Math.cos(object.rotation * Math.PI / 180);
+				object.distance += object.speed;
+
+				if (object.distance > object.speed*500)
+				{
+					// Fade out
+					laserArray.splice(index, 1)
+					laserCount--;
+				}
+
+
+				if (object.distance > 60)
+				{
+					// collision ship
+					let disX = (object.xPos + MAP_LEFT+ship.xPos) - (SCREEN_MIDDLE.x + ship.width / 2);
+					let disY = (object.yPos + MAP_TOP+ship.yPos) - (SCREEN_MIDDLE.y + ship.height / 2);
+					let dis = Math.sqrt(disX * disX + disY * disY);
+
+					if (dis < 5 + Math.min(ship.width * collisionRange, ship.height * collisionRange) / 2)
+					{
+						laserArray.splice(index, 1)
+						laserCount--;
+
+						if (ship.shield > 0)
+						{
+							if (ship.shield < 10)
+							{
+								let remainder = 10 - ship.shield;
+								ship.shield -= ship.shield;
+								ship.health -= remainder;
+							}
+							else
+							{
+								canvas.foreground.fillStyle = "blue";
+								ship.shield -= 10;
+							}
+						}
+						else if (ship.health > 0)
+						{
+							canvas.foreground.fillStyle = "red";
+							ship.health -= 10;
+						}
+						else
+						{
+							// GAME OVER
+							GAME_STATE = "lost";
+						}
+						if (ship.health <= 0)
+						{
+							// GAME OVER
+							GAME_STATE = "lost";
+						}
+						
+						canvas.foreground.beginPath();
+						canvas.foreground.arc(SCREEN_MIDDLE.x+ship.width/2, SCREEN_MIDDLE.y+ship.width/2, ship.width/2 * collisionRange, 0, 2 * Math.PI);
+						canvas.foreground.fill();
+					}	
+
+					// collision enemy
+					enemyArray.forEach(function(obj, i)
+					{
+						let eDisX = (object.xPos + MAP_LEFT+ship.xPos) - (MAP_LEFT+obj.xPos+ship.xPos+obj.width/2);
+						let eDisY = (object.yPos + MAP_TOP+ship.yPos) - (MAP_TOP+obj.yPos+ship.yPos+obj.height/2);
+						let dis = Math.sqrt(eDisX * eDisX + eDisY * eDisY);
+
+						if (dis < 5 + Math.min(obj.width, obj.height) / 2)
+						{
+							canvas.foreground.fillStyle = "red";
+							canvas.foreground.beginPath();
+							canvas.foreground.arc(MAP_LEFT+obj.xPos+ship.xPos+obj.width/2, MAP_TOP+obj.yPos+ship.yPos+obj.height/2, obj.width/2, 0, 2 * Math.PI);
+							canvas.foreground.fill();
+
+							laserArray.splice(index, 1)
+							laserCount--;
+
+							if (obj.health > 0)
+							{
+								obj.health -= 10;
+							}
+							else
+							{
+								// ENEMY DIES
+								enemyArray.splice(i, 1);
+								enemyCount--;
+								//mission.killEnemies[0]++;
+								missions[1].completed++;
+							}
+						}
+					});
+				}
+				
+				// collision rocks
+				bodies.forEach(function(rock)
+				{
+					let distanceX = (rock.x - object.xPos);
+					let distanceY = (rock.y - object.yPos);
+					let distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+					if (distance < rock.radius + 5)
+					{
+						// Collision
+						laserArray.splice(index, 1)
+						laserCount--;
+					}
+				});
+				
+
+				// lines
+				/*
+				canvas.foreground.beginPath();
+				canvas.foreground.moveTo(MAP_LEFT+object.xPos+ship.xPos+25 * Math.sin(object.rotation * Math.PI / 180), MAP_TOP+object.yPos+ship.yPos+25 * Math.cos(object.rotation * Math.PI / 180))
+				canvas.foreground.lineTo(MAP_LEFT+object.xPos+ship.xPos, MAP_TOP+object.yPos+ship.yPos);
+				canvas.foreground.strokeStyle = "red";
+				canvas.foreground.lineWidth = 5;
+				canvas.foreground.stroke();
+				*/
+				// circle
+				canvas.foreground.beginPath()
+				canvas.foreground.arc(MAP_LEFT+object.xPos+ship.xPos, MAP_TOP+object.yPos+ship.yPos, 5, 0, 2 * Math.PI, true); //SCREEN_MIDDLE.x-ship.xPos+ship.width/2
+				canvas.foreground.fillStyle = "red";
+				canvas.foreground.fill();
+				
+			});
+
+
+			canvas.playerCamera.drawImage(ship.image, SCREEN_MIDDLE.x, SCREEN_MIDDLE.y, ship.width, ship.height);
+
+			drawInterface();
+
+            canvas.background.restore();
+
+
+			let completedMissions = 0;
+			for (let i = 0; i < missions.length; i++)
+			{
+				if (missions[i].completed >= missions[i].goal) 
+				{completedMissions++;}
+			}
+			if (completedMissions == missions.length)
+			{
+				GAME_STATE = "won";
+			}
+
+
+			if (GAME_STATE == "won")
+			{
+				displayTextOnScreen("middle", 1, 50, "lime", "You Win")
+				displayTextOnScreen("middle", 3, 20, "white", "Reload page to play again")
+			}
+			if (GAME_STATE == "lost")
+			{
+				displayTextOnScreen("middle", 1, 50, "red", "Game Over")
+				displayTextOnScreen("middle", 3, 20, "white", "Reload page")
+			}
+			if (GAME_STATE == "playing")
+			{
+				setTimeout(updateScreen, GAME_UPDATE_SPEED);
+			}
+        }
+        updateScreen();
+
+    </script>
+</body>
+</html>
