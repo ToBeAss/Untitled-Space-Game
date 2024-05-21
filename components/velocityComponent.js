@@ -1,4 +1,4 @@
-export class PositionComponent
+export class VelocityComponent
 {
     constructor(x, y, z)
     {

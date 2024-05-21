@@ -8,6 +8,6 @@ export class CanvasEntity extends Entity
     {
         super();
         this.addComponent(new CanvasComponent());
-        this.addComponent(new SizeComponent());
+        this.addComponent(new SizeComponent(width, height));
     }
 }
