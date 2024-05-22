@@ -1,6 +1,9 @@
+import { AccelerationComponent } from "../components/accelerationComponent.js";
+import { AngularAccelerationComponent } from "../components/angularAccelerationComponent.js";
 import { AngularVelocityComponent } from "../components/angularVelocityComponent.js";
 import { PositionComponent } from "../components/positionComponent.js";
 import { RotationComponent } from "../components/rotationComponent.js";
+import { TrailComponent } from "../components/trailComponent.js";
 import { VelocityComponent } from "../components/velocityComponent.js";
 
 export class MovementSystem
@@ -14,12 +17,19 @@ export class MovementSystem
         const position = entity.getComponent(PositionComponent);
         const velocity = entity.getComponent(VelocityComponent);
         const rotation = entity.getComponent(RotationComponent);
+        const trail = entity.getComponent(TrailComponent);
 
         if (position && velocity && rotation) 
         {
             let angle = rotation.radians;
             position.x += velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle);
             position.y += velocity.x * Math.sin(angle) + velocity.y * Math.cos(angle);
+
+            if (trail) 
+            {
+                if (velocity.y < 0) trail.update(position);
+                else trail.update();
+            }
         }
     }
 
@@ -39,63 +49,54 @@ export class MovementSystem
     {
         const velocity = entity.getComponent(VelocityComponent);
         const angularVelocity = entity.getComponent(AngularVelocityComponent);
-        //const acceleration = entity.getComponent(); // IMPLEMENT
+        const acceleration = entity.getComponent(AccelerationComponent);
+        const angularAcceleration = entity.getComponent(AngularAccelerationComponent);
 
-        if (velocity && angularVelocity) 
-        {
+        if (velocity && angularVelocity && acceleration && angularAcceleration) {
+            // Process vertical velocity
             if (intents.moveUp && intents.moveDown) {
-                velocity.y = 0;
+                velocity.y = this.decelerate(velocity.y, acceleration);
             } else if (intents.moveUp) {
-                velocity.y = -3; // Move up
+                velocity.y = this.accelerate(velocity.y, acceleration, -1, 1);
             } else if (intents.moveDown) {
-                velocity.y = 3; // Move down
+                velocity.y = this.accelerate(velocity.y, acceleration, 1, 0.5);
             } else {
-                velocity.y = 0; // Stop vertical movement
+                velocity.y = this.decelerate(velocity.y, acceleration);
             }
 
+            // Process angular velocity
             if (intents.rotateLeft && intents.rotateRight) {
-                angularVelocity.degrees = 0;
+                angularVelocity.degrees = this.decelerate(angularVelocity.degrees, angularAcceleration);
             } else if (intents.rotateLeft) {
-                angularVelocity.degrees = -2.5; // Move left
+                angularVelocity.degrees = this.accelerate(angularVelocity.degrees, angularAcceleration, -1, 1);
             } else if (intents.rotateRight) {
-                angularVelocity.degrees = 2.5; // Move right
+                angularVelocity.degrees = this.accelerate(angularVelocity.degrees, angularAcceleration, 1, 1);
             } else {
-                angularVelocity.degrees = 0; // Stop horizontal movement
+                angularVelocity.degrees = this.decelerate(angularVelocity.degrees, angularAcceleration);
             }
             angularVelocity.radians = angularVelocity.degrees * Math.PI / 180;
-
-            // ACCELERATION
-            // might need change
-
-            /* if (intents.moveUp) {
-                velocity.y += acceleration.acceleration;
-                if (velocity.y > acceleration.maxSpeed) {
-                    velocity.y = acceleration.maxSpeed;
-                }
-            } else if (intents.moveDown) {
-                velocity.y -= acceleration.deceleration;
-                if (velocity.y < -acceleration.maxSpeed) {
-                    velocity.y = -acceleration.maxSpeed;
-                }
-            } else {
-                // Apply deceleration
-                // Similar logic for other intents
-            }
-
-            if (intents.rotateLeft) {
-                angularVelocity.degrees -= acceleration.angularAcceleration;
-                if (angularVelocity.degrees < -acceleration.maxAngularSpeed) {
-                    angularVelocity.degrees = -acceleration.maxAngularSpeed;
-                }
-            } else if (intents.rotateRight) {
-                angularVelocity.degrees += acceleration.angularAcceleration;
-                if (angularVelocity.degrees > acceleration.maxAngularSpeed) {
-                    angularVelocity.degrees = acceleration.maxAngularSpeed;
-                }
-            } else {
-                // Apply angular deceleration
-                // Similar logic for other intents
-            } */
         }
+    }
+
+    // Pass direction as -1 (forwards) or 1 (backwards)
+    accelerate(value, accelerationComponent, direction, magnitude = 1)
+    {
+        value += accelerationComponent.acceleration * direction;
+        if (value * direction >= accelerationComponent.maxSpeed * magnitude) {
+            value = accelerationComponent.maxSpeed * direction * magnitude;
+        }
+        return value;
+    }
+
+    decelerate(value, accelerationComponent)
+    {
+        if (value > 0) {
+            value -= accelerationComponent.deceleration;
+            if (value < 0) value = 0;
+        } else if (value < 0) {
+            value += accelerationComponent.deceleration;
+            if (value > 0) value = 0;
+        }
+        return value;
     }
 }

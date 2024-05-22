@@ -42,8 +42,8 @@ let accumulatedTime = 0;
 function fixedUpdate()
 {
     // Handle input logic
-    const intents = inputSystem.generateIntents();
-    movementSystem.processIntents(playerEntity, intents);
+    const playerIntents = inputSystem.generateIntents();
+    movementSystem.processIntents(playerEntity, playerIntents);
 
     // Move Entities
     movementSystem.rotateEntity(playerEntity);

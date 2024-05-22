@@ -4,6 +4,6 @@ export class VelocityComponent
     {
         this.x = x;
         this.y = y;
-        this.z = z || 1;
+        this.z = z || 0;
     }
 }

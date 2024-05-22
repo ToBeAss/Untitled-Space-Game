@@ -3,6 +3,7 @@ import { SizeComponent } from '../components/sizeComponent.js';
 import { MeshComponent } from "../components/meshComponent.js";
 import { PositionComponent } from "../components/positionComponent.js";
 import { RotationComponent } from '../components/rotationComponent.js';
+import { TrailComponent } from '../components/trailComponent.js';
 
 export class CanvasSystem
 {
@@ -50,8 +51,29 @@ export class CanvasSystem
         }
     }
 
+    drawTrail(entity)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        const trail = entity.getComponent(TrailComponent);
+
+        if (canvas && trail)
+        {
+            for (let i = 0; i < trail.positions.length - 1; i++) {
+                const pos = trail.positions[i];
+                const alpha = i/trail.positions.length;
+                canvas.ctx.beginPath();
+                canvas.ctx.arc(pos.x, pos.y, trail.width, 0, Math.PI * 2);
+                canvas.ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                canvas.ctx.fill();
+            }
+            
+        }
+    }
+
     renderEntity(entity)
     {
+        this.drawTrail(entity); // Draw the trail first
+
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const mesh = entity.getComponent(MeshComponent);
         const position = entity.getComponent(PositionComponent);
