@@ -1,7 +1,5 @@
-import { AngularVelocityComponent } from "../components/angularVelocityComponent.js";
 import { KeyboardComponent } from "../components/keyboardComponent.js";
 import { MouseComponent } from "../components/mouseComponent.js";
-import { VelocityComponent } from "../components/velocityComponent.js";
 
 export class InputSystem
 {
@@ -40,11 +38,12 @@ export class InputSystem
         if (keyboard)
         {
             window.addEventListener('keydown', (event) => {
-                keyboard.keys[event.key] = true;
+                event.preventDefault();
+                keyboard.keys[event.code] = true;
             });
     
             window.addEventListener('keyup', (event) => {
-                keyboard.keys[event.key] = false;
+                keyboard.keys[event.code] = false;
             });
         }
     }
@@ -66,17 +65,23 @@ export class InputSystem
         if (keyboard) {
             const intents = {};
 
-            if (keyboard.keys['w']) {
+            if (keyboard.keys['KeyW']) {
                 intents.moveUp = true;
             }
-            if (keyboard.keys['s']) {
+            if (keyboard.keys['KeyS']) {
                 intents.moveDown = true;
             }
-            if (keyboard.keys['a']) {
+            if (keyboard.keys['KeyA']) {
                 intents.rotateLeft = true;
             }
-            if (keyboard.keys['d']) {
+            if (keyboard.keys['KeyD']) {
                 intents.rotateRight = true;
+            }
+            if (keyboard.keys['ShiftLeft']) {
+                intents.boost = true;
+            }
+            if (keyboard.keys['Space']) {
+                intents.shoot = true;
             }
 
             return intents;

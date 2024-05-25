@@ -1,5 +1,4 @@
-// preloader.js
-export class Preloader {
+export class AssetSystem {
     constructor() {
         this.assets = [];
     }

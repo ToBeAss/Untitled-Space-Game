@@ -10,30 +10,20 @@ export class CanvasSystem
     constructor(canvasEntity)
     {
         this.canvasEntity = canvasEntity;
-        this.updateSize();
     }
 
-    updateSize()
+    setSize(width, height)
     {
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const size = this.canvasEntity.getComponent(SizeComponent);
 
         if (canvas && size) 
         {
-            canvas.element.width = size.width;
-            canvas.element.height = size.height;
-        }
-    }
-
-    setSize(width, height)
-    {
-        const size = this.canvasEntity.getComponent(SizeComponent);
-
-        if (size) 
-        {
             size.width = width;
             size.height = height;
-            this.updateSize();
+
+            canvas.element.width = size.width;
+            canvas.element.height = size.height;
         }
     }
 
@@ -58,12 +48,15 @@ export class CanvasSystem
 
         if (canvas && trail)
         {
-            for (let i = 0; i < trail.positions.length - 1; i++) {
+            for (let i = 0; i < trail.positions.length - 1; i++) 
+            {
                 const pos = trail.positions[i];
                 const alpha = i/trail.positions.length;
                 canvas.ctx.beginPath();
                 canvas.ctx.arc(pos.x, pos.y, trail.width, 0, Math.PI * 2);
-                canvas.ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                canvas.ctx.globalAlpha = alpha;
+                canvas.ctx.fillStyle = "white";
+                if (trail.isBoosting) {canvas.ctx.fillStyle = "yellow";}
                 canvas.ctx.fill();
             }
             
@@ -72,7 +65,7 @@ export class CanvasSystem
 
     renderEntity(entity)
     {
-        this.drawTrail(entity); // Draw the trail first
+        this.drawTrail(entity);
 
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const mesh = entity.getComponent(MeshComponent);
@@ -82,7 +75,7 @@ export class CanvasSystem
         
         if (canvas && mesh && position && size)
         {
-            if (mesh.image.complete) // Check if the image is loaded
+            if (mesh.image.complete)
             { 
                 let z = position.z;
                 let w = size.width * z; 
@@ -93,14 +86,10 @@ export class CanvasSystem
                 canvas.ctx.save();
 
                 if (rotation) this.rotateEntity(entity);
-                canvas.ctx.globalAlpha = mesh.alpha * z; // unsure how this turns out
+                canvas.ctx.globalAlpha = mesh.alpha * z;
                 canvas.ctx.drawImage(mesh.image, x, y, w, h);
 
                 canvas.ctx.restore();
-
-                // test
-                canvas.ctx.fillStyle = "red";
-                canvas.ctx.fillRect(-50-5, -50-5, 10, 10);
             }
             else {console.log(`Image not loaded yet: ${mesh.src}`);}
         }

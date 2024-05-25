@@ -9,5 +9,18 @@ export class CanvasEntity extends Entity
         super();
         this.addComponent(new CanvasComponent());
         this.addComponent(new SizeComponent(width, height));
+        this.updateSize();
+    }
+
+    updateSize()
+    {
+        const canvas = this.getComponent(CanvasComponent);
+        const size = this.getComponent(SizeComponent);
+
+        if (canvas && size)
+        {
+            canvas.element.width = size.width;
+            canvas.element.height = size.height;
+        }
     }
 }

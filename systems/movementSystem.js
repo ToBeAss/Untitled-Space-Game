@@ -51,13 +51,23 @@ export class MovementSystem
         const angularVelocity = entity.getComponent(AngularVelocityComponent);
         const acceleration = entity.getComponent(AccelerationComponent);
         const angularAcceleration = entity.getComponent(AngularAccelerationComponent);
+        const trail = entity.getComponent(TrailComponent);
+
+        if (trail) {trail.isBoosting = false;} // maybe change implementation
 
         if (velocity && angularVelocity && acceleration && angularAcceleration) {
             // Process vertical velocity
             if (intents.moveUp && intents.moveDown) {
                 velocity.y = this.decelerate(velocity.y, acceleration);
             } else if (intents.moveUp) {
-                velocity.y = this.accelerate(velocity.y, acceleration, -1, 1);
+                if (intents.boost) {
+                    velocity.y = this.accelerate(velocity.y, acceleration, -1, 2);
+                    if (trail) {trail.isBoosting = true;}
+                } else if (velocity.y < -acceleration.maxSpeed) {
+                    velocity.y = this.decelerate(velocity.y, acceleration);
+                } else {
+                    velocity.y = this.accelerate(velocity.y, acceleration, -1, 1);
+                }
             } else if (intents.moveDown) {
                 velocity.y = this.accelerate(velocity.y, acceleration, 1, 0.5);
             } else {

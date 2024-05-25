@@ -7,6 +7,7 @@ export class TrailComponent
         this.positions = [];
         this.interval = interval;
         this.frameCounter = 0;
+        this.isBoosting = false;
     }
 
     addPosition(position) {

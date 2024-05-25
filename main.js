@@ -2,11 +2,13 @@ import { MeshComponent } from './components/meshComponent.js';
 import { CameraSystem } from './systems/cameraSystem.js';
 import { CanvasEntity } from './entities/canvasEntity.js';
 import { PlayerEntity } from './entities/playerEntity.js';
-import { Preloader } from './preloader.js';
+import { AssetSystem } from './systems/assetSystem.js';
 import { CanvasSystem } from './systems/canvasSystem.js';
 import { MovementSystem } from './systems/movementSystem.js';
 import { InputEntity } from './entities/inputEntity.js';
 import { InputSystem } from './systems/inputSystem.js';
+import { SceneSystem } from './systems/sceneSystem.js';
+import { SceneEntity } from './entities/sceneEntity.js';
 
 // Initialize Entities
 let inputEntity = new InputEntity();
@@ -19,28 +21,24 @@ let canvasSystem = new CanvasSystem(canvasEntity);
 let cameraSystem = new CameraSystem(canvasEntity);
 let movementSystem = new MovementSystem();
 
-
-let preloader = new Preloader();
+// Handle game assets
+let assetSystem = new AssetSystem();
 let playerMesh = playerEntity.getComponent(MeshComponent);
-preloader.addAsset(playerMesh);
+assetSystem.addAsset(playerMesh);
 
-
-preloader.loadAll().then(() => {
-    // game loop
-    update(performance.now());
-    
+assetSystem.loadAll().then(() => {  
+    update(performance.now()); // Start game loop
 }).catch(error => {
     console.error("Error loading assets", error);
 });
 
 
-const fixedUpdateInterval = 1000 / 50;
-let lastTime = performance.now();
-let accumulatedTime = 0;
+// Handle game scenes
+let sceneSystem = new SceneSystem();
+let spaceScene = new SceneEntity("Space");
 
-
-function fixedUpdate()
-{
+// Add fixed update instructions
+spaceScene.addFixedInstruction(() => {
     // Handle input logic
     const playerIntents = inputSystem.generateIntents();
     movementSystem.processIntents(playerEntity, playerIntents);
@@ -48,6 +46,35 @@ function fixedUpdate()
     // Move Entities
     movementSystem.rotateEntity(playerEntity);
     movementSystem.moveEntity(playerEntity);
+});
+
+// Add regular update instructions
+spaceScene.addUpdateInstruction(() => {
+    // Clear canvas
+    canvasSystem.resetCanvas();
+    
+    // Camera logic
+    cameraSystem.follow(playerEntity);
+
+    // Render Entities
+    canvasSystem.renderEntity(playerEntity);
+});
+
+// Add the scene to the manager and set it as the current scene
+sceneSystem.addScene(spaceScene);
+sceneSystem.switchScene("Space");
+
+
+// Setup for fixedUpdate interval
+const fixedUpdateInterval = 1000 / 50;
+let lastTime = performance.now();
+let accumulatedTime = 0;
+
+
+function fixedUpdate()
+{
+    // Scene logic
+    sceneSystem.runFixedUpdateInstructions();
 }
 
 function update(currentTime)
@@ -65,14 +92,8 @@ function update(currentTime)
         accumulatedTime -= fixedUpdateInterval;
     }
     
-    // Clear canvas
-    canvasSystem.resetCanvas();
-    
-    // Camera logic
-    cameraSystem.follow(playerEntity);
-
-    // Render Entities
-    canvasSystem.renderEntity(playerEntity);
+    // Scene logic
+    sceneSystem.runUpdateInstructions();
 
     // Request the next frame
     requestAnimationFrame(update);
