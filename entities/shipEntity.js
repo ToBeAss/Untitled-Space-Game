@@ -9,14 +9,15 @@ import { AccelerationComponent } from "../components/accelerationComponent.js";
 import { AngularAccelerationComponent } from "../components/angularAccelerationComponent.js";
 import { TrailComponent } from "../components/trailComponent.js";
 
-export class PlayerEntity extends Entity
+export class ShipEntity extends Entity
 {
-    constructor()
+    constructor(src, pos)
     {
         super();
-        this.addComponent(new MeshComponent("../images/ship.png"));
+        let imageSource = "../images/" + src;
+        this.addComponent(new MeshComponent(imageSource));
         this.addComponent(new SizeComponent(60, 60));
-        this.addComponent(new PositionComponent(0, 0));
+        this.addComponent(new PositionComponent(pos.x, pos.y));
         this.addComponent(new RotationComponent(0));
         this.addComponent(new VelocityComponent(0, 0));
         this.addComponent(new AngularVelocityComponent(0));

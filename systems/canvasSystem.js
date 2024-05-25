@@ -73,7 +73,7 @@ export class CanvasSystem
         const size = entity.getComponent(SizeComponent);
         const rotation = entity.getComponent(RotationComponent);
         
-        if (canvas && mesh && position && size)
+        if (canvas && mesh && position && size && rotation)
         {
             if (mesh.image.complete)
             { 
@@ -85,7 +85,7 @@ export class CanvasSystem
                 
                 canvas.ctx.save();
 
-                if (rotation) this.rotateEntity(entity);
+                this.rotateEntity(entity);
                 canvas.ctx.globalAlpha = mesh.alpha * z;
                 canvas.ctx.drawImage(mesh.image, x, y, w, h);
 
@@ -105,6 +105,18 @@ export class CanvasSystem
             canvas.ctx.restore();
             canvas.ctx.clearRect(0, 0, size.width, size.height);
             canvas.ctx.save();
+        }
+    }
+
+    fillCanvas(color)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        const size = this.canvasEntity.getComponent(SizeComponent);
+
+        if (canvas && size)
+        {
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.fillRect(0, 0, size.width, size.height);
         }
     }
 }
