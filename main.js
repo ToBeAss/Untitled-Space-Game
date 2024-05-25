@@ -17,7 +17,7 @@ let inputEntity = new InputEntity();
 let canvasEntity = new CanvasEntity(400, 400);
 let playerShip = new ShipEntity("ship.png", {x: 0, y: 0});
 let enemyArray = [];
-for (let i = 0; i < 0; i++) { // Number of enemies
+for (let i = 0; i < 10; i++) { // Number of enemies
     let x = Math.random() * 400 - 200;
     enemyArray.push(new ShipEntity("enemy.png", {x: x, y: 0}));
 }
@@ -110,7 +110,7 @@ let sceneManager = new SceneSystem();
         canvasSystem.resetCanvas();
         
         // Camera logic
-        cameraSystem.follow(playerShip);
+        cameraSystem.follow(playerShip, false);
 
         // Render Entities
         enemyArray.forEach(function(enemy) {
@@ -172,7 +172,7 @@ let sceneManager = new SceneSystem();
 // Add scenes to sceneManager
 sceneManager.addScene(spaceScene);
 sceneManager.addScene(planetScene);
-sceneManager.addScene(dragRaceScene);
+sceneManager.addScene(dragRaceScene); // bonus scene
 
 // Set active scene
 sceneManager.switchScene("Space");
