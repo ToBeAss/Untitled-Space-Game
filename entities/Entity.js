@@ -1,8 +1,23 @@
 export class Entity
 {
-    constructor()
+    static typeCounters = {};
+    constructor(entityType)
     {
+        this.id = this.generateId(entityType);
         this.components = new Map();
+    }
+
+    static incrementCounter(entityType) {
+        if (!this.typeCounters[entityType]) {
+            this.typeCounters[entityType] = 0;
+        }
+        return ++this.typeCounters[entityType];
+    }
+
+    generateId(entityType)
+    {
+        const count = Entity.incrementCounter(entityType);
+        return entityType + ":" + count;
     }
 
     addComponent(component)
@@ -12,8 +27,6 @@ export class Entity
 
     getComponent(componentClass)
     {
-        const component = this.components.get(componentClass.name);
-        if (!component) console.error(`Component ${componentClass.name} not found`);
-        return component;
+        return this.components.get(componentClass.name);
     }
 }

@@ -6,7 +6,7 @@ export class InputEntity extends Entity
 {
     constructor()
     {
-        super();
+        super("InputEntity");
         this.addComponent(new MouseComponent());
         this.addComponent(new KeyboardComponent());
     }

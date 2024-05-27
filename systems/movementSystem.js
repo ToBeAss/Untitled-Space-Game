@@ -12,6 +12,15 @@ export class MovementSystem
     {
     }
 
+    bounceEntity(entity, normal)
+    {
+        const velocity = entity.getComponent(VelocityComponent);
+        const rotation = entity.getComponent(RotationComponent);
+        if (velocity && rotation) {
+            velocity.y = -velocity.y;
+        }
+    }
+
     moveEntity(entity)
     {
         const position = entity.getComponent(PositionComponent);

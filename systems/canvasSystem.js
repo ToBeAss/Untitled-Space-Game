@@ -4,6 +4,9 @@ import { MeshComponent } from "../components/meshComponent.js";
 import { PositionComponent } from "../components/positionComponent.js";
 import { RotationComponent } from '../components/rotationComponent.js';
 import { TrailComponent } from '../components/trailComponent.js';
+import { ColorComponent } from '../components/colorComponent.js';
+import { CollisionComponent } from '../components/collisionComponent.js';
+import { HealthComponent } from '../components/healthComponent.js';
 
 export class CanvasSystem
 {
@@ -63,9 +66,28 @@ export class CanvasSystem
         }
     }
 
-    renderEntity(entity)
+    drawHitBox(entity, showHitBox = false)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        const position = entity.getComponent(PositionComponent);
+        const collision = entity.getComponent(CollisionComponent);
+        const health = entity.getComponent(HealthComponent);
+
+        if (showHitBox || (health && health.isBeingDamaged))
+        {
+            if (canvas && position && collision)
+            {
+                let color = "white";
+                if (health.isBeingDamaged) color = "red";
+                this.drawCircle(position, collision.radius, color, 0.5)
+            }
+        }
+    }
+
+    renderEntity(entity, showHitBox = false)
     {
         this.drawTrail(entity);
+        this.drawHitBox(entity, showHitBox);
 
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const mesh = entity.getComponent(MeshComponent);
@@ -95,6 +117,53 @@ export class CanvasSystem
         }
     }
 
+    drawLaser(entity)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        const position = entity.getComponent(PositionComponent);
+        const size = entity.getComponent(SizeComponent);
+        const rotation = entity.getComponent(RotationComponent);
+        const color = entity.getComponent(ColorComponent);
+
+        if (canvas && position && size && rotation && color)
+        {
+            let angle = rotation.radians;
+            let tail = {};
+            tail.x = position.x - size.height * Math.sin(angle);
+            tail.y = position.y + size.height * Math.cos(angle);
+            this.drawLine(position, tail, size.width, color.color, 1 * position.z);
+        }
+    }
+
+    drawLine(positionA = {x: 0, y: 0}, positionB = {x: 0, y: 0}, lineWidth = 0, color = "white", alpha = 1)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        if (canvas)
+        {
+            canvas.ctx.lineWidth = lineWidth;
+            canvas.ctx.strokeStyle = color;
+            canvas.ctx.globalAlpha = alpha;
+            canvas.ctx.beginPath()
+            canvas.ctx.moveTo(positionA.x, positionA.y);
+            canvas.ctx.lineTo(positionB.x, positionB.y);
+            canvas.ctx.stroke();
+        }
+    }
+
+    drawCircle(position = {x: 0, y: 0}, radius = 0, color = "white", alpha = 1)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+
+        if (canvas)
+        {
+            canvas.ctx.beginPath();
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.globalAlpha = alpha;
+            canvas.ctx.arc(position.x, position.y, radius, 0, Math.PI * 2);
+            canvas.ctx.fill();
+        }
+    }
+
     resetCanvas()
     {
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
@@ -104,6 +173,7 @@ export class CanvasSystem
         {
             canvas.ctx.restore();
             canvas.ctx.clearRect(0, 0, size.width, size.height);
+            canvas.ctx.globalAlpha = 1;
             canvas.ctx.save();
         }
     }

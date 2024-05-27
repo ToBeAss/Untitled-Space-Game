@@ -4,7 +4,7 @@ export class SceneEntity extends Entity
 {
     constructor(name)
     {
-        super();
+        super("SceneEntity");
         this.name = name;
         this.fixedUpdateInstructions = [];
         this.updateInstructions = [];

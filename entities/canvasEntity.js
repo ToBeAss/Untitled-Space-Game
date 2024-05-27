@@ -6,7 +6,7 @@ export class CanvasEntity extends Entity
 {
     constructor(width, height)
     {
-        super();
+        super("CanvasEntity");
         this.addComponent(new CanvasComponent());
         this.addComponent(new SizeComponent(width, height));
         this.updateSize();
