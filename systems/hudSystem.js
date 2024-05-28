@@ -19,7 +19,7 @@ export class HUDSystem
         {
             let text = (health.health/health.maxHealth * 100).toFixed(0) + "%";
             let offset = {x: 0, y: -25}
-            this.drawText(text, position, offset,"white", 14);
+            this.drawText(text, position, offset, "white", 14);
         }
     }
 

@@ -8,12 +8,18 @@ export class CameraSystem
     constructor(canvasEntity)
     {
         this.canvasEntity = canvasEntity
+        this.scale = 1;
     }
 
-    static(x, y)
+    static(x = 0, y = 0)
     {
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
-        if (canvas) canvas.ctx.translate(x, y);
+        const size = this.canvasEntity.getComponent(SizeComponent);
+        if (canvas && size) 
+        {
+            canvas.ctx.translate(size.width/2 + x, size.height/2 + y);
+            canvas.ctx.scale(this.scale, this.scale);
+        }
     }
 
     follow(entity, followRotation = false)
@@ -25,7 +31,8 @@ export class CameraSystem
         if (canvas && size && position) 
         {
             if (followRotation) {this.rotateAround(entity);}
-            canvas.ctx.translate(size.width/2 - position.x, size.height/2 - position.y);
+            canvas.ctx.translate(size.width/2 - position.x * this.scale, size.height/2 - position.y * this.scale);
+            canvas.ctx.scale(this.scale, this.scale);
         }
     }
 
@@ -41,5 +48,11 @@ export class CameraSystem
             canvas.ctx.rotate(-rotation.radians);
             canvas.ctx.translate(-size.width/2, -size.height/2);
         }
+    }
+
+    zoom(scale = 1)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        if (canvas) this.scale = scale;
     }
 }

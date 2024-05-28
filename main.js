@@ -3,7 +3,7 @@ import { CameraSystem } from './systems/cameraSystem.js';
 import { CanvasEntity } from './entities/canvasEntity.js';
 import { ShipEntity } from './entities/shipEntity.js';
 import { AssetSystem } from './systems/assetSystem.js';
-import { CanvasSystem } from './systems/canvasSystem.js';
+import { RenderingSystem } from './systems/renderingSystem.js';
 import { MovementSystem } from './systems/movementSystem.js';
 import { InputEntity } from './entities/inputEntity.js';
 import { InputSystem } from './systems/inputSystem.js';
@@ -15,7 +15,6 @@ import { CollisionSystem } from './systems/collisionSystem.js';
 import { DamageSystem } from './systems/damageSystem.js';
 import { LaserSystem } from './systems/laserSystem.js';
 import { HUDSystem } from './systems/hudSystem.js';
-
 
 // Initialize Entities
 let inputEntity = new InputEntity();
@@ -36,7 +35,7 @@ for (let i = 0; i < 10; i++) { // Number of asteroids
 
 // Initialize Systems
 let inputSystem = new InputSystem(inputEntity);
-let canvasSystem = new CanvasSystem(canvasEntity);
+let renderingSystem = new RenderingSystem(canvasEntity);
 let hudSystem = new HUDSystem(canvasEntity);
 let cameraSystem = new CameraSystem(canvasEntity);
 let movementSystem = new MovementSystem();
@@ -170,26 +169,26 @@ let sceneManager = new SceneSystem();
 
     spaceScene.addUpdateInstruction(() => {
         // Clear canvas
-        canvasSystem.resetCanvas();
+        renderingSystem.resetCanvas();
         
         // Camera logic
         cameraSystem.follow(playerShip, false);
 
         // Render Entities
         asteroidArray.forEach(function(asteroid) {
-            canvasSystem.renderEntity(asteroid, false);
+            renderingSystem.renderEntity(asteroid, false);
         });
 
         laserSystem.laserArray.forEach(function(laser) {
-            canvasSystem.drawLaser(laser);
+            renderingSystem.drawLaser(laser);
         });
 
         enemyArray.forEach(function(enemy) {
-            canvasSystem.renderEntity(enemy, false);
+            renderingSystem.renderEntity(enemy, false);
             hudSystem.displayHealth(enemy);
         });
 
-        canvasSystem.renderEntity(playerShip, false);
+        renderingSystem.renderEntity(playerShip, false);
         hudSystem.displayHealth(playerShip);
     });
 // - - - - - - - - - -
@@ -198,8 +197,8 @@ let sceneManager = new SceneSystem();
 
     planetScene.addUpdateInstruction(() => {
         // Test
-        canvasSystem.resetCanvas();
-        canvasSystem.fillCanvas("cyan");
+        canvasEntity.clearCanvas();
+        canvasEntity.fillCanvas("cyan");
     });
 // - - - - - - - - - -
 // DRAG RACE SCENE
@@ -229,17 +228,17 @@ let sceneManager = new SceneSystem();
 
     dragRaceScene.addUpdateInstruction(() => {
         // Clear canvas
-        canvasSystem.resetCanvas();
+        renderingSystem.resetCanvas();
         
         // Camera logic
         cameraSystem.follow(playerShip);
 
         // Render Entities
         enemyArray.forEach(function(enemy) {
-            canvasSystem.renderEntity(enemy);
+            renderingSystem.renderEntity(enemy);
         });
 
-        canvasSystem.renderEntity(playerShip);
+        renderingSystem.renderEntity(playerShip);
     });
 // - - - - - - - - - -
 

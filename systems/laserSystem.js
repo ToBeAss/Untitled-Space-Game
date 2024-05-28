@@ -40,7 +40,7 @@ export class LaserSystem
 
         const lifeSpan = laserEntity.getComponent(LifeSpanComponent);
 
-        if (lifeSpan.lifeSpan > 7) { // Maybe change to laser signaute solution
+        if (lifeSpan.lifeSpan > 10) { // Maybe change to laser signaute solution
             entityArray.forEach(function(entity) {
                 let collisionResult = collisionSystem.checkCircularCollision(laserEntity, entity);
                 if (collisionResult.collision) {
