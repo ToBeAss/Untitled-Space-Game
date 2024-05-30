@@ -114,6 +114,8 @@ export class RenderingSystem
             tail.x = position.x - size.height * Math.sin(angle);
             tail.y = position.y + size.height * Math.cos(angle);
             this.canvasEntity.strokeLine(position, tail, size.width, color.color, 1 * position.z);
+            // Draw point for debugging purposes
+            //this.canvasEntity.fillCircle(position, size.width, color.color, 1 * position.z);
         }
     }
 

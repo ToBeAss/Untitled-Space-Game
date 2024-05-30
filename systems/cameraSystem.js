@@ -52,7 +52,6 @@ export class CameraSystem
 
     zoom(scale = 1)
     {
-        const canvas = this.canvasEntity.getComponent(CanvasComponent);
-        if (canvas) this.scale = scale;
+        this.scale = scale;
     }
 }

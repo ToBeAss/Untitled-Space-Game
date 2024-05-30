@@ -29,6 +29,6 @@ export class ShipEntity extends Entity
         this.addComponent(new TrailComponent());
         this.addComponent(new CollisionComponent(25));
         this.addComponent(new HealthComponent(100));
-        this.addComponent(new WeaponComponent(250));
+        this.addComponent(new WeaponComponent(200));
     }
 }

@@ -16,8 +16,8 @@ export class LaserEntity extends Entity
         this.addComponent(new RotationComponent(rotation));
         this.addComponent(new ColorComponent(color));
         this.addComponent(new SizeComponent(3, 20));
-        this.addComponent(new VelocityComponent(0, -10));
-        this.addComponent(new CollisionComponent(3));
+        this.addComponent(new VelocityComponent(0, -15));
+        this.addComponent(new CollisionComponent(1));
         this.addComponent(new LifeSpanComponent(500));
     }
 }

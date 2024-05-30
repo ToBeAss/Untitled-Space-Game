@@ -113,10 +113,6 @@ let sceneManager = new SceneSystem();
         movementSystem.processIntents(playerShip, playerIntents);
         laserSystem.processIntents(playerShip, playerIntents);
 
-        // Move player
-        movementSystem.rotateEntity(playerShip);
-        movementSystem.moveEntity(playerShip);
-
         // Handle lasers
         laserSystem.laserArray.forEach(function(laser) {
             // Manage lifespan
@@ -165,6 +161,10 @@ let sceneManager = new SceneSystem();
             movementSystem.rotateEntity(enemy);
             movementSystem.moveEntity(enemy);
         });
+
+        // Move player
+        movementSystem.rotateEntity(playerShip);
+        movementSystem.moveEntity(playerShip);
     });
 
     spaceScene.addUpdateInstruction(() => {
