@@ -54,4 +54,15 @@ export class CameraSystem
     {
         this.scale = scale;
     }
+
+    timedZoom(start, end, duration, runningTime)
+    {
+        let timeStep = runningTime / duration
+        let range = end - start;
+        if (timeStep <= 1) {
+            this.scale = range * timeStep + start;
+        }
+        else this.scale = end;
+
+    }
 }

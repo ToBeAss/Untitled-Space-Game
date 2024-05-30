@@ -93,6 +93,7 @@ function update(currentTime)
     }
     
     // Scene logic
+    sceneManager.sceneDuration += deltaTime;
     sceneManager.runUpdateInstructions();
 
     // Request the next frame
@@ -272,6 +273,7 @@ let sceneManager = new SceneSystem();
         // Test
         renderingSystem.resetCanvas();
         cameraSystem.static();
+        cameraSystem.timedZoom(0.5, 2, 3000, sceneManager.sceneDuration);
         hudSystem.drawText("Game Over!", {x: 0, y: 0}, {x: 0, y: 0}, "red", 24);
         hudSystem.drawText("You died", {x: 0, y: 24}, {x: 0, y: 0}, "red", 12);
     });
