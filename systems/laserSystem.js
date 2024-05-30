@@ -7,11 +7,9 @@ import { LaserEntity } from "../entities/laserEntity.js";
 
 export class LaserSystem
 {
-    constructor(collisionSystem, damageSystem)
+    constructor()
     {
         this.laserArray = [];
-        this.collisionSystem = collisionSystem;
-        this.damageSystem = damageSystem;
     }
 
     processIntents(entity, intents)
@@ -38,22 +36,6 @@ export class LaserSystem
                 setTimeout(function() {weapon.isReady = true}, weapon.cooldown);
             }
         }
-    }
-
-    handleCollisions(laserEntity, entityArray)
-    {
-        let lasers = this.laserArray;
-        let collisionSystem = this.collisionSystem;
-        let damageSystem = this.damageSystem;
-
-        entityArray.forEach(function(entity) {
-            let collisionResult = collisionSystem.checkCircularCollision(laserEntity, entity);
-            if (collisionResult.collision) {
-                damageSystem.dealDamage(entity, 2.5);
-                let index = lasers.indexOf(laserEntity);
-                lasers.splice(index, 1);
-            }
-        });
     }
 
     updateLifeSpan(laserEntity)

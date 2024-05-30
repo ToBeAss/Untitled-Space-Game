@@ -15,7 +15,7 @@ export class DamageSystem
             health.health -= damage;
             if (health.health <= 0) {
                 health.health = 0;
-                console.log(entity.id + " is dead") // dead
+                entity.isDead = true;
             }
         }
     }

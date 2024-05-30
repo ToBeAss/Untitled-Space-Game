@@ -28,10 +28,10 @@ export class HUDSystem
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         if (canvas)
         {
-            let width = canvas.ctx.measureText(text).width;
             canvas.ctx.fillStyle = color;
             canvas.ctx.globalAlpha = 1;
             canvas.ctx.font = size + "px Monaco";
+            let width = canvas.ctx.measureText(text).width;
             canvas.ctx.fillText(text, position.x - width/2 + offset.x, position.y + size/2 + offset.y);
         }
     }

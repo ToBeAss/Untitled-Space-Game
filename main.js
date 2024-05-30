@@ -21,6 +21,7 @@ let inputEntity = new InputEntity();
 let canvasEntity = new CanvasEntity(400, 400);
 let playerShip = new ShipEntity("ship.png", {x: 0, y: 0});
 let enemyArray = [];
+let deadEnemyArray = [];
 for (let i = 0; i < 2; i++) { // Number of enemies
     let x = Math.random() * 400 - 200;
     enemyArray.push(new ShipEntity("enemy.png", {x: x, y: 0}));
@@ -42,7 +43,7 @@ let movementSystem = new MovementSystem();
 let enemySystem = new EnemySystem();
 let collisionSystem = new CollisionSystem();
 let damageSystem = new DamageSystem();
-let laserSystem = new LaserSystem(collisionSystem, damageSystem);
+let laserSystem = new LaserSystem();
 
 
 // Handle game assets
@@ -108,19 +109,28 @@ let sceneManager = new SceneSystem();
     let spaceScene = new SceneEntity("Space");
 
     spaceScene.addFixedInstruction(() => {
+        // Check if player is dead
+        if (playerShip.isDead) sceneManager.switchScene("Game Over");
+        
         // Handle input logic
         const playerIntents = inputSystem.generateIntents();
         movementSystem.processIntents(playerShip, playerIntents);
         laserSystem.processIntents(playerShip, playerIntents);
 
         // Handle lasers
-        laserSystem.laserArray.forEach(function(laser) {
+        laserSystem.laserArray.forEach(function(laser, index) {
             // Manage lifespan
             laserSystem.updateLifeSpan(laser);
 
             // Check collisions
             let entityArray = [playerShip, ...enemyArray, ...asteroidArray];
-            laserSystem.handleCollisions(laser, entityArray);
+            entityArray.forEach(function(entity) {
+                let collisionResult = collisionSystem.checkCircularCollision(laser, entity);
+                if (collisionResult.collision) {
+                    damageSystem.dealDamage(entity, 2.5);
+                    laserSystem.laserArray.splice(index, 1);
+                }
+            });
             
             // Move laser
             movementSystem.moveEntity(laser);
@@ -150,7 +160,13 @@ let sceneManager = new SceneSystem();
         });
 
         // Handle enemies
-        enemyArray.forEach(function(enemy) {
+        enemyArray.forEach(function(enemy, index) {
+            // Remove enemy if dead
+            if (enemy.isDead) {
+                let deadEnemy = enemyArray.splice(index, 1)[0];
+                deadEnemyArray.push(deadEnemy);
+            }
+
             // Check for player collision?
 
             // Handle enemy logic
@@ -158,6 +174,12 @@ let sceneManager = new SceneSystem();
             movementSystem.processIntents(enemy, enemyIntents);
 
             // Move enemies
+            movementSystem.rotateEntity(enemy);
+            movementSystem.moveEntity(enemy);
+        });
+        // Handle dead enemies
+        deadEnemyArray.forEach(function(enemy) {
+            movementSystem.processIntents(enemy, {});
             movementSystem.rotateEntity(enemy);
             movementSystem.moveEntity(enemy);
         });
@@ -186,6 +208,9 @@ let sceneManager = new SceneSystem();
         enemyArray.forEach(function(enemy) {
             renderingSystem.renderEntity(enemy, false);
             hudSystem.displayHealth(enemy);
+        });
+        deadEnemyArray.forEach(function(enemy) {
+            renderingSystem.renderEntity(enemy, false);
         });
 
         renderingSystem.renderEntity(playerShip, false);
@@ -241,11 +266,22 @@ let sceneManager = new SceneSystem();
         renderingSystem.renderEntity(playerShip);
     });
 // - - - - - - - - - -
+// GAME OVER SCENE
+    let gameOverScene = new SceneEntity("Game Over");
+    gameOverScene.addUpdateInstruction(() => {
+        // Test
+        renderingSystem.resetCanvas();
+        cameraSystem.static();
+        hudSystem.drawText("Game Over!", {x: 0, y: 0}, {x: 0, y: 0}, "red", 24);
+        hudSystem.drawText("You died", {x: 0, y: 24}, {x: 0, y: 0}, "red", 12);
+    });
+// - - - - - - - - - -
 
 // Add scenes to sceneManager
 sceneManager.addScene(spaceScene);
 sceneManager.addScene(planetScene);
 sceneManager.addScene(dragRaceScene); // bonus scene
+sceneManager.addScene(gameOverScene);
 
 // Set active scene
 sceneManager.switchScene("Space");

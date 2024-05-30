@@ -17,6 +17,7 @@ export class ShipEntity extends Entity
     constructor(src, pos)
     {
         super("ShipEntity");
+        this.isDead = false;
         let imageSource = "../images/" + src;
         this.addComponent(new MeshComponent(imageSource));
         this.addComponent(new SizeComponent(60, 60));
