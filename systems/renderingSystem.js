@@ -89,7 +89,7 @@ export class RenderingSystem
         
         if (canvas && mesh && position && size && rotation)
         {
-            if (mesh.image.complete)
+            if (mesh.element.complete)
             { 
                 let z = position.z;
                 let w = size.width * z; 
@@ -101,7 +101,7 @@ export class RenderingSystem
 
                 this.rotateEntity(entity);
                 canvas.ctx.globalAlpha = mesh.alpha * z;
-                canvas.ctx.drawImage(mesh.image, x, y, w, h);
+                canvas.ctx.drawImage(mesh.element, x, y, w, h);
 
                 canvas.ctx.restore();
             }

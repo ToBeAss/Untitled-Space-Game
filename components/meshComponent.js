@@ -1,18 +1,10 @@
-export class MeshComponent
+import { Asset } from "./Asset.js";
+
+export class MeshComponent extends Asset
 {
     constructor(src, alpha)
     {
-        this.image = new Image();
-        this.src = src;
+        super(new Image(), src);
         this.alpha = alpha || 1;
-    }
-
-    load() {
-        return new Promise((resolve) => {
-            this.image.onload = () => {
-                resolve();
-            };
-            this.image.src = this.src;
-        });
     }
 }
