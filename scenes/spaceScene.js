@@ -1,6 +1,7 @@
 import { AsteroidEntity } from "../entities/asteroidEntity.js";
 import { SceneEntity } from "../entities/sceneEntity.js";
 import { ShipEntity } from "../entities/shipEntity.js";
+import { worldManager } from "../main.js";
 import { sceneManager } from "../main.js";
 import { inputEntity } from "../main.js";
 import { canvasEntity } from "../main.js";
@@ -33,6 +34,7 @@ export function initSpaceScene()
 
     // Add init instructions
     spaceScene.addInitInstruction(() => {
+        // Make function to spawn entitites
         let player = new ShipEntity("ship.png", {x: 0, y: 0});
 
         let enemies = [];
@@ -41,18 +43,12 @@ export function initSpaceScene()
             enemies.push(new ShipEntity("enemy.png", {x: x, y: 0}));
         }
 
-        let asteroids = [];
-        for (let i = 0; i < 10; i++) { // Number of asteroids
-            let x = Math.random() * 800-400;
-            let y = Math.random() * 800-400;
-            let size = Math.random() * 50 + 100;
-            asteroids.push(new AsteroidEntity("asteroid.png", {x: x, y: y}, size));
-        }
+        worldManager.generateSystem("Race Track", 800, 0, 0, 10);
+        let sys = worldManager.getSystem("Race Track");
 
-        // Make function to generate systems and planets
         sceneManager.currentSystem = {
             player: player,
-            asteroids: asteroids,
+            asteroids: sys.asteroids,
             enemies: enemies,
             deadEnemies: []
         }

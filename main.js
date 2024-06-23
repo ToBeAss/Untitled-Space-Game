@@ -1,7 +1,8 @@
 import { CanvasEntity } from './entities/canvasEntity.js';
 import { InputEntity } from './entities/inputEntity.js';
-import { SceneSystem } from './systems/sceneSystem.js';
 import { AssetSystem } from './systems/assetSystem.js';
+import { SceneSystem } from './systems/sceneSystem.js';
+import { WorldGenerationSystem } from './systems/worldGenerationSystem.js';
 
 import { initGameOverScene } from './scenes/gameOverScene.js';
 import { initPlanetScene } from './scenes/planetScene.js';
@@ -21,6 +22,7 @@ export var canvasEntity = new CanvasEntity(window.innerWidth, window.innerHeight
 // Global system Systems
 export var assetManager = new AssetSystem();
 export var sceneManager = new SceneSystem();
+export var worldManager = new WorldGenerationSystem();
 
 
 // Add scenes to sceneManager
