@@ -6,6 +6,7 @@ export class SceneEntity extends Entity
     {
         super("SceneEntity");
         this.name = name;
+        this.hasBeenInitialized = false;
         this.initInstructions = [];
         this.fixedUpdateInstructions = [];
         this.updateInstructions = [];

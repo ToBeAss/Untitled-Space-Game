@@ -1,3 +1,5 @@
+import { assetManager } from "../main.js";
+
 export class SceneSystem
 {
     constructor()
@@ -18,7 +20,17 @@ export class SceneSystem
     {
         this.currentScene = this.scenes.get(sceneName);
         this.sceneDuration = 0;
-        this.runInitInstructions(); // might be bad
+        if (this.currentScene.hasBeenInitialized === false) 
+        {
+            this.currentScene.hasBeenInitialized = true;
+            this.currentScene.runInitInstructions();
+            
+            // Load new assets
+            assetManager.loadAll().catch(error => {
+                console.error("Error loading assets", error);
+            });
+            console.log("Loaded assets: " + assetManager.assets.length);
+        }
     }
 
     runInitInstructions() 

@@ -1,4 +1,5 @@
 import { SceneEntity } from "../entities/sceneEntity.js";
+import { ShipEntity } from "../entities/shipEntity.js";
 import { sceneManager } from "../main.js";
 import { inputEntity } from "../main.js";
 import { canvasEntity } from "../main.js";
@@ -17,6 +18,26 @@ export function initDragRaceScene()
     let cameraSystem = new CameraSystem(canvasEntity);
     let inputSystem = new InputSystem(inputEntity);
     let movementSystem = new MovementSystem();
+
+
+    // Add init instructions
+    dragRaceScene.addInitInstruction(() => {
+        let player = new ShipEntity("ship.png", {x: 0, y: 0});
+
+        let enemies = [];
+        for (let i = 0; i < 4; i++) { // Number of enemies
+            let x = Math.random() * 400 - 200;
+            enemies.push(new ShipEntity("enemy.png", {x: x, y: 0}));
+        }
+
+        sceneManager.currentSystem = {
+            player: player,
+            asteroids: [],
+            enemies: enemies,
+            deadEnemies: []
+        }
+    });
+
 
     // Add fixed update instructions
     dragRaceScene.addFixedInstruction(() => {
@@ -41,6 +62,7 @@ export function initDragRaceScene()
         movementSystem.moveEntity(sceneManager.currentSystem.player);
     });
 
+    
     // Add update instructions
     dragRaceScene.addUpdateInstruction(() => {
         // Clear canvas

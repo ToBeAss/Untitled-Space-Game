@@ -16,6 +16,7 @@ export function initGameOverScene()
     let hudSystem = new HUDSystem(canvasEntity);
     let cameraSystem = new CameraSystem(canvasEntity);
 
+    
     // Add update instructions
     gameOverScene.addUpdateInstruction(() => {
         // Test

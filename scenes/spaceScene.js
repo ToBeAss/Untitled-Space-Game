@@ -1,4 +1,6 @@
+import { AsteroidEntity } from "../entities/asteroidEntity.js";
 import { SceneEntity } from "../entities/sceneEntity.js";
+import { ShipEntity } from "../entities/shipEntity.js";
 import { sceneManager } from "../main.js";
 import { inputEntity } from "../main.js";
 import { canvasEntity } from "../main.js";
@@ -28,10 +30,39 @@ export function initSpaceScene()
     let damageSystem = new DamageSystem();
     let laserSystem = new LaserSystem();
 
+
+    // Add init instructions
+    spaceScene.addInitInstruction(() => {
+        let player = new ShipEntity("ship.png", {x: 0, y: 0});
+
+        let enemies = [];
+        for (let i = 0; i < 2; i++) { // Number of enemies
+            let x = Math.random() * 400 - 200;
+            enemies.push(new ShipEntity("enemy.png", {x: x, y: 0}));
+        }
+
+        let asteroids = [];
+        for (let i = 0; i < 10; i++) { // Number of asteroids
+            let x = Math.random() * 800-400;
+            let y = Math.random() * 800-400;
+            let size = Math.random() * 50 + 100;
+            asteroids.push(new AsteroidEntity("asteroid.png", {x: x, y: y}, size));
+        }
+
+        // Make function to generate systems and planets
+        sceneManager.currentSystem = {
+            player: player,
+            asteroids: asteroids,
+            enemies: enemies,
+            deadEnemies: []
+        }
+    });
+
+
     // Add fixed update instructions
     spaceScene.addFixedInstruction(() => {
         // Check if player is dead
-        if (damageSystem.checkIfDead(sceneManager.currentSystem.player)) sceneManager.switchScene("Game Over"); // Might need name instead
+        if (damageSystem.checkIfDead(sceneManager.currentSystem.player)) sceneManager.switchScene("Game Over");
         
         // Handle input logic
         const playerIntents = inputSystem.generateIntents();
@@ -116,6 +147,7 @@ export function initSpaceScene()
         movementSystem.rotateEntity(sceneManager.currentSystem.player);
         movementSystem.moveEntity(sceneManager.currentSystem.player);
     });
+
 
     // Add update instructions
     spaceScene.addUpdateInstruction(() => {

@@ -9,6 +9,7 @@ export function initPlanetScene()
     // Initialize Systems
     
 
+    
     // Add update instructions
     planetScene.addUpdateInstruction(() => {
         // Test

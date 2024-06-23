@@ -7,7 +7,6 @@ export class Asset
         this.element = element;
         this.type = element.tagName.toLowerCase();
         this.src = src;
-        console.log(this.type)
         assetManager.addAsset(this);
     }
 
