@@ -1,13 +1,11 @@
-import { CanvasComponent } from "../components/canvasComponent.js";
 import { CollisionComponent } from "../components/collisionComponent.js";
-import { HealthComponent } from "../components/healthComponent.js";
 import { PositionComponent } from "../components/positionComponent.js";
 
 export class CollisionSystem
 {
     constructor()
     {}
-
+    
     checkCircularCollision(entityA, entityB)
     {
         const positionA = entityA.getComponent(PositionComponent);

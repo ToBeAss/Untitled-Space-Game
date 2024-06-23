@@ -1,7 +1,7 @@
 body {
     margin: 0;
-    background-color: black;
+    background-color: steelblue;
 }
 canvas {
-    border: 1px solid white;
+    position: fixed;
 }

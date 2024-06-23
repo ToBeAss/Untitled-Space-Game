@@ -1,24 +1,31 @@
-import { MeshComponent } from './components/meshComponent.js';
-import { CameraSystem } from './systems/cameraSystem.js';
 import { CanvasEntity } from './entities/canvasEntity.js';
-import { ShipEntity } from './entities/shipEntity.js';
-import { AssetSystem } from './systems/assetSystem.js';
-import { RenderingSystem } from './systems/renderingSystem.js';
-import { MovementSystem } from './systems/movementSystem.js';
 import { InputEntity } from './entities/inputEntity.js';
-import { InputSystem } from './systems/inputSystem.js';
+
 import { SceneSystem } from './systems/sceneSystem.js';
-import { SceneEntity } from './entities/sceneEntity.js';
-import { EnemySystem } from './systems/enemySystem.js';
+import { AssetSystem } from './systems/assetSystem.js';
+import { MeshComponent } from './components/meshComponent.js';
+
 import { AsteroidEntity } from './entities/asteroidEntity.js';
-import { CollisionSystem } from './systems/collisionSystem.js';
-import { DamageSystem } from './systems/damageSystem.js';
-import { LaserSystem } from './systems/laserSystem.js';
-import { HUDSystem } from './systems/hudSystem.js';
+import { ShipEntity } from './entities/shipEntity.js';
+
+import { initGameOverScene } from './scenes/gameOverScene.js';
+import { initPlanetScene } from './scenes/planetScene.js';
+import { initDragRaceScene } from './scenes/dragRaceScene.js';
+import { initSpaceScene } from './scenes/spaceScene.js';
+
+
+// Global System Entities
+export var inputEntity = new InputEntity();
+export var canvasEntity = new CanvasEntity(window.innerWidth, window.innerHeight);
+
+
+// Temporary resize func
+onresize = function() {
+    canvasEntity.setSize(window.innerWidth, window.innerHeight);
+}
 
 // Initialize Entities
-let inputEntity = new InputEntity();
-let canvasEntity = new CanvasEntity(400, 400);
+// Should probably do per scene?
 let playerShip = new ShipEntity("ship.png", {x: 0, y: 0});
 let enemyArray = [];
 let deadEnemyArray = [];
@@ -34,20 +41,11 @@ for (let i = 0; i < 10; i++) { // Number of asteroids
     asteroidArray.push(new AsteroidEntity("asteroid.png", {x: x, y: y}, size));
 }
 
-// Initialize Systems
-let inputSystem = new InputSystem(inputEntity);
-let renderingSystem = new RenderingSystem(canvasEntity);
-let hudSystem = new HUDSystem(canvasEntity);
-let cameraSystem = new CameraSystem(canvasEntity);
-let movementSystem = new MovementSystem();
-let enemySystem = new EnemySystem();
-let collisionSystem = new CollisionSystem();
-let damageSystem = new DamageSystem();
-let laserSystem = new LaserSystem();
-
 
 // Handle game assets
-let assetManager = new AssetSystem();
+// Assets should self initialize from component?
+export var assetManager = new AssetSystem();
+
 let playerMesh = playerShip.getComponent(MeshComponent);
 assetManager.addAsset(playerMesh);
 enemyArray.forEach(function(enemy) {
@@ -102,188 +100,24 @@ function update(currentTime)
 
 
 // Handle game scenes
-let sceneManager = new SceneSystem();
+export var sceneManager = new SceneSystem();
 
-// SCENES:
-// - - - - - - - - - -
-// SPACE SCENE
-    let spaceScene = new SceneEntity("Space");
-
-    spaceScene.addFixedInstruction(() => {
-        // Check if player is dead
-        if (playerShip.isDead) sceneManager.switchScene("Game Over");
-        
-        // Handle input logic
-        const playerIntents = inputSystem.generateIntents();
-        movementSystem.processIntents(playerShip, playerIntents);
-        laserSystem.processIntents(playerShip, playerIntents);
-
-        // Handle lasers
-        laserSystem.laserArray.forEach(function(laser, index) {
-            // Manage lifespan
-            laserSystem.updateLifeSpan(laser);
-
-            // Check collisions
-            let entityArray = [playerShip, ...enemyArray, ...asteroidArray];
-            entityArray.forEach(function(entity) {
-                let collisionResult = collisionSystem.checkCircularCollision(laser, entity);
-                if (collisionResult.collision) {
-                    damageSystem.dealDamage(entity, 2.5);
-                    laserSystem.laserArray.splice(index, 1);
-                }
-            });
-            
-            // Move laser
-            movementSystem.moveEntity(laser);
-        });
-
-        // Handle asteroids
-        asteroidArray.forEach(function(asteroid) {
-            // Check for player collision
-            let collisionResult = collisionSystem.checkCircularCollision(asteroid, playerShip);
-            if (collisionResult.collision) {
-                damageSystem.dealDamage(playerShip, 0.25);
-            // Needs fixing:
-                //movementSystem.bounceEntity(playerShip, collisionResult.normal);
-            }
-
-            // Check for enemy collisions
-            enemyArray.forEach(function(enemy) {
-                let collisionResult = collisionSystem.checkCircularCollision(asteroid, enemy);
-                if (collisionResult.collision) {
-                    damageSystem.dealDamage(enemy, 0.25);
-                }
-            });
-
-            // Move asteroids
-            movementSystem.rotateEntity(asteroid);
-            movementSystem.moveEntity(asteroid);
-        });
-
-        // Handle enemies
-        enemyArray.forEach(function(enemy, index) {
-            // Remove enemy if dead
-            if (enemy.isDead) {
-                let deadEnemy = enemyArray.splice(index, 1)[0];
-                deadEnemyArray.push(deadEnemy);
-            }
-
-            // Check for player collision?
-
-            // Handle enemy logic
-            const enemyIntents = enemySystem.generateIntents();
-            movementSystem.processIntents(enemy, enemyIntents);
-
-            // Move enemies
-            movementSystem.rotateEntity(enemy);
-            movementSystem.moveEntity(enemy);
-        });
-        // Handle dead enemies
-        deadEnemyArray.forEach(function(enemy) {
-            movementSystem.processIntents(enemy, {});
-            movementSystem.rotateEntity(enemy);
-            movementSystem.moveEntity(enemy);
-        });
-
-        // Move player
-        movementSystem.rotateEntity(playerShip);
-        movementSystem.moveEntity(playerShip);
-    });
-
-    spaceScene.addUpdateInstruction(() => {
-        // Clear canvas
-        renderingSystem.resetCanvas();
-        
-        // Camera logic
-        cameraSystem.follow(playerShip, false);
-
-        // Render Entities
-        asteroidArray.forEach(function(asteroid) {
-            renderingSystem.renderEntity(asteroid, false);
-        });
-
-        laserSystem.laserArray.forEach(function(laser) {
-            renderingSystem.drawLaser(laser);
-        });
-
-        enemyArray.forEach(function(enemy) {
-            renderingSystem.renderEntity(enemy, false);
-            hudSystem.displayHealth(enemy);
-        });
-        deadEnemyArray.forEach(function(enemy) {
-            renderingSystem.renderEntity(enemy, false);
-        });
-
-        renderingSystem.renderEntity(playerShip, false);
-        hudSystem.displayHealth(playerShip);
-    });
-// - - - - - - - - - -
-// PLANET SCENE
-    let planetScene = new SceneEntity("Planet");
-
-    planetScene.addUpdateInstruction(() => {
-        // Test
-        canvasEntity.clearCanvas();
-        canvasEntity.fillCanvas("cyan");
-    });
-// - - - - - - - - - -
-// DRAG RACE SCENE
-    let dragRaceScene = new SceneEntity("Drag Race");
-
-    dragRaceScene.addFixedInstruction(() => {
-        let bools = [true, false];
-        enemyArray.forEach(function(enemy) {
-            // Handle enemy logic
-            let boost = bools[Math.round(Math.random() + 0.25)];
-            const enemyIntents = {moveUp: true, boost: boost};
-            movementSystem.processIntents(enemy, enemyIntents);
-
-            // Move enemies
-            movementSystem.rotateEntity(enemy);
-            movementSystem.moveEntity(enemy);
-        });
-
-        // Handle input logic
-        const playerIntents = inputSystem.generateIntents();
-        movementSystem.processIntents(playerShip, playerIntents);
-
-        // Move player
-        movementSystem.rotateEntity(playerShip);
-        movementSystem.moveEntity(playerShip);
-    });
-
-    dragRaceScene.addUpdateInstruction(() => {
-        // Clear canvas
-        renderingSystem.resetCanvas();
-        
-        // Camera logic
-        cameraSystem.follow(playerShip);
-
-        // Render Entities
-        enemyArray.forEach(function(enemy) {
-            renderingSystem.renderEntity(enemy);
-        });
-
-        renderingSystem.renderEntity(playerShip);
-    });
-// - - - - - - - - - -
-// GAME OVER SCENE
-    let gameOverScene = new SceneEntity("Game Over");
-    gameOverScene.addUpdateInstruction(() => {
-        // Test
-        renderingSystem.resetCanvas();
-        cameraSystem.static();
-        cameraSystem.timedZoom(0.5, 2, 3000, sceneManager.sceneDuration);
-        hudSystem.drawText("Game Over!", {x: 0, y: 0}, {x: 0, y: 0}, "red", 24);
-        hudSystem.drawText("You died", {x: 0, y: 24}, {x: 0, y: 0}, "red", 12);
-    });
-// - - - - - - - - - -
+// Handle initial system generation
+const STAR_SYSTEMS = {
+    default: {
+        player: playerShip,
+        asteroids: asteroidArray,
+        enemies: enemyArray,
+        deadEnemies: deadEnemyArray
+    }
+}
+sceneManager.currentSystem = STAR_SYSTEMS.default;
 
 // Add scenes to sceneManager
-sceneManager.addScene(spaceScene);
-sceneManager.addScene(planetScene);
-sceneManager.addScene(dragRaceScene); // bonus scene
-sceneManager.addScene(gameOverScene);
+sceneManager.addScene(initSpaceScene());
+sceneManager.addScene(initPlanetScene());
+sceneManager.addScene(initGameOverScene());
+sceneManager.addScene(initDragRaceScene()); // bonus scene
 
-// Set active scene
+// Set default scene
 sceneManager.switchScene("Space");

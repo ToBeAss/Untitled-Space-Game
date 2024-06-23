@@ -11,6 +11,7 @@ import { TrailComponent } from "../components/trailComponent.js";
 import { CollisionComponent } from "../components/collisionComponent.js";
 import { HealthComponent } from "../components/healthComponent.js";
 import { WeaponComponent } from "../components/weaponComponent.js";
+import { VisionComponent } from "../components/visionComponent.js";
 
 export class ShipEntity extends Entity
 {
@@ -28,8 +29,9 @@ export class ShipEntity extends Entity
         this.addComponent(new AccelerationComponent(0.1, 0.05, 3));
         this.addComponent(new AngularAccelerationComponent(0.1, 0.1, 3));
         this.addComponent(new TrailComponent());
-        this.addComponent(new CollisionComponent(25));
+        this.addComponent(new CollisionComponent(60/2.5));
         this.addComponent(new HealthComponent(100));
         this.addComponent(new WeaponComponent(200));
+        this.addComponent(new VisionComponent(60*2.5, 360));
     }
 }

@@ -7,6 +7,7 @@ import { TrailComponent } from '../components/trailComponent.js';
 import { ColorComponent } from '../components/colorComponent.js';
 import { CollisionComponent } from '../components/collisionComponent.js';
 import { HealthComponent } from '../components/healthComponent.js';
+import { VisionComponent } from '../components/visionComponent.js';
 
 export class RenderingSystem
 {
@@ -48,28 +49,37 @@ export class RenderingSystem
         }
     }
 
-    drawHitBox(entity, showHitBox = false)
+    drawHitBox(entity, color = "white")
     {
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const position = entity.getComponent(PositionComponent);
         const collision = entity.getComponent(CollisionComponent);
-        const health = entity.getComponent(HealthComponent);
 
-        if (showHitBox || (health && health.isBeingDamaged))
-        {
-            if (canvas && position && collision)
-            {
-                let color = "white";
-                if (health.isBeingDamaged) color = "red";
-                this.canvasEntity.fillCircle(position, collision.radius, color, 0.5)
-            }
+        if (canvas && position && collision) {   
+            this.canvasEntity.fillCircle(position, collision.radius, color, 0.5);
         }
     }
 
-    renderEntity(entity, showHitBox = false)
+    drawVision(entity)
+    {
+        const canvas = this.canvasEntity.getComponent(CanvasComponent);
+        const position = entity.getComponent(PositionComponent);
+        const vision = entity.getComponent(VisionComponent);
+        if (canvas && position && vision) {
+            let color = "white"
+            if (vision.isSeeing) color = "red";
+            this.canvasEntity.fillCircle(position, vision.radius, color, 0.5);
+        }
+    }
+
+    renderEntity(entity)
     {
         this.drawTrail(entity);
-        this.drawHitBox(entity, showHitBox);
+        
+        const health = entity.getComponent(HealthComponent);
+        if (health && health && health.isBeingDamaged && health.health > 0) {
+            this.drawHitBox(entity, "red");
+        }
 
         const canvas = this.canvasEntity.getComponent(CanvasComponent);
         const mesh = entity.getComponent(MeshComponent);

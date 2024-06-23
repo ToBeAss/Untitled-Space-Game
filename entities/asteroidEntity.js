@@ -19,6 +19,6 @@ export class AsteroidEntity extends Entity
         this.addComponent(new RotationComponent(0));
         this.addComponent(new VelocityComponent(0, 0));
         this.addComponent(new AngularVelocityComponent(0.25));
-        this.addComponent(new CollisionComponent(50));
+        this.addComponent(new CollisionComponent(size/2.5));
     }
 }

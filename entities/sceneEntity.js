@@ -6,8 +6,14 @@ export class SceneEntity extends Entity
     {
         super("SceneEntity");
         this.name = name;
+        this.initInstructions = [];
         this.fixedUpdateInstructions = [];
         this.updateInstructions = [];
+    }
+
+    addInitInstruction(instruction) 
+    {
+        this.initInstructions.push(instruction);
     }
 
     addFixedInstruction(instruction) 
@@ -18,6 +24,11 @@ export class SceneEntity extends Entity
     addUpdateInstruction(instruction) 
     {
         this.updateInstructions.push(instruction);
+    }
+
+    runInitInstructions() 
+    {
+        this.initInstructions.forEach(instruction => instruction());
     }
 
     runFixedUpdateInstructions() 

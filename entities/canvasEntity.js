@@ -42,16 +42,18 @@ export class CanvasEntity extends Entity
         }
     }
 
-    fillCircle(position = {x: 0, y: 0}, radius = 0, color = "white", alpha = 1)
+    fillCircle(position = {x: 0, y: 0}, radius = 0, color = "white", alpha = 1, angle = 360)
     {
         const canvas = this.getComponent(CanvasComponent);
 
         if (canvas)
         {
+            let start = 0 * Math.PI / 180
+            let radians = angle * Math.PI / 180;
             canvas.ctx.beginPath();
             canvas.ctx.fillStyle = color;
             canvas.ctx.globalAlpha = alpha;
-            canvas.ctx.arc(position.x, position.y, radius, 0, Math.PI * 2);
+            canvas.ctx.arc(position.x, position.y, radius, start, start + radians);
             canvas.ctx.fill();
         }
     }

@@ -5,6 +5,8 @@ export class SceneSystem
         this.scenes = new Map();
         this.currentScene = null;
         this.sceneDuration = 0;
+        this.currentSystem = null;
+        this.currentPlanet = null;
     }
 
     addScene(sceneEntity) 
@@ -16,6 +18,15 @@ export class SceneSystem
     {
         this.currentScene = this.scenes.get(sceneName);
         this.sceneDuration = 0;
+        this.runInitInstructions(); // might be bad
+    }
+
+    runInitInstructions() 
+    {
+        if (this.currentScene) 
+        {
+            this.currentScene.runInitInstructions();
+        }
     }
 
     runFixedUpdateInstructions() 
